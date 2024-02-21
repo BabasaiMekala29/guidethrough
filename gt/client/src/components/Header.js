@@ -1,0 +1,298 @@
+import * as React from 'react';
+import {Button, ButtonGroup, AppBar, Box, Toolbar, IconButton,Typography,InputBase,Badge,MenuItem,Menu,Avatar} from '@mui/material';
+import { styled, alpha } from '@mui/material/styles';
+import SearchIcon from '@mui/icons-material/Search';
+import AccountCircle from '@mui/icons-material/AccountCircle';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import MoreIcon from '@mui/icons-material/MoreVert';
+import LoginIcon from '@mui/icons-material/Login';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import LogoutIcon from '@mui/icons-material/Logout';
+import logoImg from '../images/logo.jpg';
+import { Link } from 'react-router-dom';
+import { UserContext } from '../UserContext';
+import { useState,useEffect,useContext } from 'react';
+const Search = styled('div')(({ theme }) => ({
+    position: 'relative',
+    borderRadius: theme.shape.borderRadius,
+    backgroundColor: alpha(theme.palette.common.white, 0.15),
+    '&:hover': {
+        backgroundColor: alpha(theme.palette.common.white, 0.25),
+    },
+    marginRight: theme.spacing(2),
+    marginLeft: 0,
+    width: '100%',
+    [theme.breakpoints.up('sm')]: {
+        marginLeft: theme.spacing(3),
+        width: 'auto',
+    },
+}));
+
+const SearchIconWrapper = styled('div')(({ theme }) => ({
+    padding: theme.spacing(0, 2),
+    height: '100%',
+    position: 'absolute',
+    pointerEvents: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+}));
+
+const StyledInputBase = styled(InputBase)(({ theme }) => ({
+    color: 'inherit',
+    '& .MuiInputBase-input': {
+        padding: theme.spacing(1, 1, 1, 0),
+        // vertical padding + font size from searchIcon
+        paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+        transition: theme.transitions.create('width'),
+        width: '100%',
+        [theme.breakpoints.up('md')]: {
+            width: '20ch',
+        },
+    },
+}));
+
+function Header() {
+    const [anchorEl, setAnchorEl] = React.useState(null); 
+    const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
+    const {userInfo, setUserInfo} = useContext(UserContext);
+    useEffect(() => {
+        fetch('http://127.0.0.1:4000/profile', {
+          credentials: 'include'
+        })
+          .then(res => {
+            // console.log("Response status:", res.status);
+            res.json().then(userInfo => {
+              console.log("User info:", userInfo);
+              setUserInfo(userInfo);
+            });
+          })
+          .catch(error => {
+            console.error("Fetch error:", error);
+          });
+      }, []);
+   
+      function logout(){
+        fetch('http://127.0.0.1:4000/logout',{
+          credentials: "include",
+          method: "POST"
+        })
+        setUserInfo(null); 
+      }
+    
+      
+    const isMenuOpen = Boolean(anchorEl);
+    const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
+
+    const handleProfileMenuOpen = (event) => {
+        setAnchorEl(event.currentTarget);
+    };
+      
+
+    const handleMobileMenuClose = () => {
+        setMobileMoreAnchorEl(null);
+    };
+
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+        handleMobileMenuClose();
+    };
+
+    const handleMobileMenuOpen = (event) => {
+        setMobileMoreAnchorEl(event.currentTarget);
+    };
+    const username = userInfo?.username;
+    const searchStyle = {
+        width: 600
+    }
+    const menuId = 'primary-search-account-menu';
+    const renderMenu = (
+        <Menu
+            anchorEl={anchorEl}
+            anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+            }}
+            id={menuId}
+            keepMounted
+            transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+            }}
+            open={isMenuOpen}
+            onClose={handleMenuClose}
+        >
+            <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
+            <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+        </Menu>
+    );
+
+    const mobileMenuId = 'primary-search-account-menu-mobile';
+    const renderMobileMenu = (
+        <Menu
+            anchorEl={mobileMoreAnchorEl}
+            anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+            }}
+            id={mobileMenuId}
+            keepMounted
+            transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+            }}
+            open={isMobileMenuOpen}
+            onClose={handleMobileMenuClose}
+        >
+
+            {
+             !username&&   ( <> <Link to={'/login'} style={{textDecoration:"none", color:"inherit"}}>
+                <MenuItem >
+                    <IconButton
+                        size="large"
+                        color="inherit"
+                    >
+                        <Badge color="error">
+                            <LoginIcon />
+                        </Badge>
+                    </IconButton>
+                    <p>Login</p>
+                </MenuItem>
+            </Link>
+            <Link to={'/signup'} style={{textDecoration:"none", color:"inherit"}}>
+                <MenuItem>
+                    <IconButton
+                        size="large"
+                        color="inherit"    
+                    >
+                        <Badge color="error">
+                        <PersonAddIcon />
+                        </Badge>
+                    </IconButton>
+                    <p>Sign up</p>
+                </MenuItem>
+            </Link> </>) }   
+           { username && ( <>
+                <MenuItem onClick={logout}>
+                    <IconButton
+                        size="large"
+                        color="inherit"    
+                    >
+                        <Badge color="error">
+                        <LogoutIcon />
+                        </Badge>
+                    </IconButton>
+                    <p>Logout</p>
+                </MenuItem>
+            
+            <MenuItem>
+                <IconButton
+                    size="large"
+                    color="inherit"
+                >
+                    <Badge badgeContent={17} color="error">
+                        <NotificationsIcon />
+                    </Badge>
+                </IconButton>
+                <p>Notifications</p>
+            </MenuItem>
+            <MenuItem onClick={handleProfileMenuOpen}>
+                <IconButton
+                    size="large"
+                    aria-label="account of current user"
+                    aria-controls="primary-search-account-menu"
+                    aria-haspopup="true"
+                    color="inherit"
+                >
+                    <AccountCircle />
+                </IconButton>
+                <p>Profile</p>
+            </MenuItem> </>)}
+        </Menu>
+    );
+     
+    return (
+        
+        <Box>
+            <AppBar position="static" elevation={0}>
+                <Toolbar sx={{ display: "flex", justifyContent: "space-between" }} >
+                    <Box sx={{ display: 'flex' }}>
+                    <Avatar src={logoImg}  />
+                        <Search sx={{ display: { xs: 'none', md: 'block' }}} >
+                            <SearchIconWrapper >
+                                <SearchIcon />
+                            </SearchIconWrapper>
+                            <StyledInputBase
+                                sx={{ width:600 }}
+                                placeholder="Search…"
+                                inputProps={{ 'aria-label': 'search' }}
+                            />
+                        </Search>
+                        <Search sx={{ display: { xs: 'block', md: 'none' }}}>
+                            <SearchIconWrapper >
+                                <SearchIcon />
+                            </SearchIconWrapper>
+                            <StyledInputBase
+                                placeholder="Search…"
+                                inputProps={{ 'aria-label': 'search' }}
+                            />
+                        </Search>
+                    </Box>
+                    <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+                        {
+                            !username&& (
+                                <>
+                                    <Button href='/login' variant="text"  size="small" sx={{color:'#fefefe',marginRight:'4px'}}>login</Button>
+                                    <Button href='/signup' variant="text" size="small" sx={{color:"#fefefe"}}>sign up</Button> 
+                                </>
+                            )
+                    } 
+                             {
+                            username&&(
+                                <>
+                                    <Button onClick={logout} variant="text" size="small" sx={{color:"#fefefe"}}>logout</Button>                       
+                                    <IconButton
+                                        size="large"
+                                        aria-label="show 17 new notifications"
+                                        color="inherit"
+                                    >
+                                        <Badge badgeContent={17} color="error">
+                                            <NotificationsIcon />
+                                        </Badge>
+                                    </IconButton>
+                                    <IconButton
+                                        size="large"
+                                        edge="end"
+                                        aria-label="account of current user"
+                                        aria-controls={menuId}
+                                        aria-haspopup="true"
+                                        onClick={handleProfileMenuOpen}
+                                        color="inherit"
+                                    >
+                                        <AccountCircle />
+                                    </IconButton>
+                                 </>
+                            )
+                            } 
+                    </Box>
+                    <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
+                        <IconButton
+                            size="large"
+                            aria-label="show more"
+                            aria-controls={mobileMenuId}
+                            aria-haspopup="true"
+                            onClick={handleMobileMenuOpen}
+                            color="inherit"
+                        >
+                            <MoreIcon />
+                        </IconButton>
+                    </Box>
+                </Toolbar>
+            </AppBar>
+            {renderMobileMenu}
+            {renderMenu}
+        </Box>
+    );
+}
+
+export default Header;
