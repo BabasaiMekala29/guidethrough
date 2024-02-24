@@ -11,213 +11,149 @@ import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import Header from './Header';
-import TextField from '@mui/material/TextField';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import { Link, useParams,Navigate } from 'react-router-dom';
-import { useState } from 'react';
+import BlogCard from './BlogCard';
+import { Link, useParams } from 'react-router-dom';
+import PostModal from './PostModal';
+import { useState, useEffect } from 'react';
+
 const pages = ['Blog', "Dont's", 'Tips', 'Q&A'];
 
-function Endgame({uid}) {
-    console.log(uid);
+function Endgame() {
+    const { head, subhead } = useParams();
     const [open, setOpen] = React.useState(false);
+    const [selectedItem, setSelectedItem] = React.useState('Blog');
+    const [anchorElNav, setAnchorElNav] = React.useState(null);
+    const [posts, setPosts] = useState([]);
+
+    useEffect(() => {
+        const fetchPosts = async () => {
+            console.log("hiii")
+            try {
+                const response = await fetch(`http://127.0.0.1:4000/category/${head}/${subhead}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch posts');
+                }
+                const data = await response.json();
+                console.log(data);
+                setPosts(data);
+
+            } catch (error) {
+                console.log(error);
+            }
+        };
+
+        fetchPosts();
+    }, [head, subhead]);
 
     const handleClickOpen = () => {
         setOpen(true);
+        console.log(selectedItem);
+        return (
+            <PostModal />
+        )
     };
 
-    const handleClose = () => {
-        setOpen(false);
-    };
-    const {head,subhead} = useParams();
-    const [anchorElNav, setAnchorElNav] = React.useState(null);
-    const [anchorElUser, setAnchorElUser] = React.useState(null);
-    const [selectedItem, setSelectedItem] = React.useState('Blog');
     const handleOpenNavMenu = (event) => {
         setAnchorElNav(event.currentTarget);
     };
-    const handleOpenUserMenu = (event) => {
-        setAnchorElUser(event.currentTarget);
-    };
+
 
     const handleCloseNavMenu = () => {
-        
         setAnchorElNav(null);
-
     };
 
-    const handleCloseUserMenu = () => {
-        setAnchorElUser(null);
-    };
-
-    const handleBgColor = (page) =>{
+    const handleBgColor = (page) => {
         handleCloseNavMenu();
         setSelectedItem(page);
     }
-    const [title,setTitle] = useState('');
-    const [description,setDescription] = useState('');
-    const [upvote,setUpvote] = useState(0);
-    const [downvote,setDownvote] = useState(0);
-    const [likes,setLikes] = useState(0);
-    const [redirect,setRedirect] = useState(false);
-    async function createPost(e){
-        e.preventDefault();
-        // const data = new FormData();
-        // data.set('title',title);
-        // data.set('description',description);
-        // data.set('upvote',upvote);
-        // data.set('downvote',downvote);
-        // data.set('likes',likes);
-        // data.set('category',head);
-        // data.set('subsection',subhead);
-        const response = await fetch('http://127.0.0.1:4000/post',{
-            method: 'POST',
-            body:JSON.stringify({title,description,upvote,downvote,likes,category:head,subsection:subhead}),
-            headers:{'Content-Type':'application/json'},
-            credentials: 'include'
-        })
-        if(response.ok){
-            setRedirect(true);
-        }
-        handleClose();
-    }
-    
-    if(redirect){
-        return <Navigate to='/category' />
-    }
 
-    
     return (
         <div>
-        <>
-            <Header />
+            <>
+                <Header />
 
-            <AppBar position="static" sx={{ backgroundColor: "#fefefe", color: '#000000' }}>
-                <Container maxWidth="xl">
-                    <Toolbar disableGutters>
+                <AppBar position="static" sx={{ backgroundColor: "#fefefe", color: '#000000' }}>
+                    <Container maxWidth="xl">
+                        <Toolbar disableGutters>
 
-                        <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
-                            <IconButton
-                                size="large"
-                                aria-label="account of current user"
-                                aria-controls="menu-appbar"
-                                aria-haspopup="true"
-                                onClick={handleOpenNavMenu}
-                                color="inherit"
-                            >
-                                <MenuIcon />
-                            </IconButton>
-                            <Menu
-                                id="menu-appbar"
-                                anchorEl={anchorElNav}
-                                anchorOrigin={{
-                                    vertical: 'bottom',
-                                    horizontal: 'left',
-                                }}
-                                keepMounted
-                                transformOrigin={{
-                                    vertical: 'top',
-                                    horizontal: 'left',
-                                }}
-                                open={Boolean(anchorElNav)}
-                                onClose={handleCloseNavMenu}
-                                sx={{
-                                    display: { xs: 'block', md: 'none' },
-                                }}
-                            >
-                                {pages.map((page) => (
-                                    <MenuItem key={page} onClick={() => handleBgColor(page)} sx={{backgroundColor: selectedItem === page ? 'orange' : 'inherit' }}>
-                                        <Typography textAlign="center">{page}</Typography>
-                                    </MenuItem>
-                                ))}
-                            </Menu>        
-                            <DriveFileRenameOutlineIcon onClick={handleClickOpen} sx={{ display: { xs: 'flex', md: 'none' }, mr: 1, width: 36, height: 36, marginLeft: 'auto',cursor:"pointer" }} />
-                        </Box>
-                        <Link style={{color:'#000000'}}>
-                            <DriveFileRenameOutlineIcon onClick={handleClickOpen} sx={{ display: { xs: 'none', md: 'flex' }, mr: 1, width: 36, height: 36 }}  />
-                        </Link>
-                        <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex', justifyContent: 'space-around', alignItems: 'center' } }}>
-                            {pages.map((page) => (
-                                <Button
-                                    
-                                    key={page}
-                                    onClick={() => setSelectedItem(page)}
-                                    sx={{ my: 2, color: '#000000', display: 'block',backgroundColor: selectedItem === page ? 'orange' : 'inherit'  }}
+                            <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
+                                <IconButton
+                                    size="large"
+                                    aria-label="account of current user"
+                                    aria-controls="menu-appbar"
+                                    aria-haspopup="true"
+                                    onClick={handleOpenNavMenu}
+                                    color="inherit"
                                 >
-                                    {page}
-                                </Button>
-                            ))}
+                                    <MenuIcon />
+                                </IconButton>
+                                <Menu
+                                    id="menu-appbar"
+                                    anchorEl={anchorElNav}
+                                    anchorOrigin={{
+                                        vertical: 'bottom',
+                                        horizontal: 'left',
+                                    }}
+                                    keepMounted
+                                    transformOrigin={{
+                                        vertical: 'top',
+                                        horizontal: 'left',
+                                    }}
+                                    open={Boolean(anchorElNav)}
+                                    onClose={handleCloseNavMenu}
+                                    sx={{
+                                        display: { xs: 'block', md: 'none' },
+                                    }}
+                                >
+                                    {pages.map((page) => (
+                                        <MenuItem key={page} onClick={() => handleBgColor(page)} sx={{ backgroundColor: selectedItem === page ? 'orange' : 'inherit' }}>
+                                            <Typography textAlign="center">{page}</Typography>
+                                        </MenuItem>
+                                    ))}
+                                </Menu>
 
-                        </Box>
+                                <DriveFileRenameOutlineIcon onClick={handleClickOpen} sx={{ display: { xs: 'flex', md: 'none' }, mr: 1, width: 36, height: 36, marginLeft: 'auto', cursor: "pointer" }} />
+
+                            </Box>
+                            <Link style={{ color: '#000000' }} to={`/category/${head}/${subhead}/${selectedItem}/postt`}>
+                                <DriveFileRenameOutlineIcon onClick={handleClickOpen} sx={{ display: { xs: 'none', md: 'flex' }, mr: 1, width: 36, height: 36 }} />
+                            </Link>
+                            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex', justifyContent: 'space-around', alignItems: 'center' } }}>
+                                {pages.map((page) => (
+                                    <Button
+
+                                        key={page}
+                                        onClick={() => setSelectedItem(page)}
+                                        sx={{ my: 2, color: '#000000', display: 'block', backgroundColor: selectedItem === page ? 'orange' : 'inherit' }}
+                                    >
+                                        {page}
+                                    </Button>
+                                ))}
+
+                            </Box>
 
 
-                    </Toolbar>
-                </Container>
-            </AppBar>
-            
-        </>
-        <React.Fragment>
-      
-        
-        <Dialog
-          open={open}
-          onClose={handleClose}
-          fullWidth
-          PaperProps={{
-            component: 'form',
-            
-          }}
-        >
-          <DialogTitle>Create Post</DialogTitle>
-          <DialogContent>
-            <Typography>Section: {head}</Typography>
-            <Typography>Sub category: {subhead}</Typography>
-          </DialogContent>
-            {
-                selectedItem==='Blog'&&(
-                    <DialogContent>
-                    <TextField
-                    autoFocus
-                    required
-                    margin="dense"
-                    id="heading"
-                    name="heading"
-                    label="Add heading"
-                    type="text"
-                    fullWidth
-                    variant="standard"
-                    value={title}
-                    onChange={e=>setTitle(e.target.value)}
-                    />
-                    </DialogContent>
-                )
-            }
-          <DialogContent>
-            <TextField
-              required
-              margin="dense"
-              id={selectedItem}
-              name={selectedItem}
-              label={`Add ${selectedItem}`}
-              type="text"
-              fullWidth
-              multiline
-              rows={5}
-              variant="outlined"
-              value={description}
-                onChange={e=>setDescription(e.target.value)}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleClose}>Cancel</Button>
-            <Button onClick={createPost}>Post</Button>
-          </DialogActions>
-        </Dialog>
-      </React.Fragment>
-      
-      </div>
+                        </Toolbar>
+                    </Container>
+                </AppBar>
+
+            </>
+            <>
+                <Typography paddingLeft={'10px'} paddingTop={'10px'}>{head}{' > '}{subhead}</Typography>
+            </>
+            <Container sx={{ paddingTop: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                {
+                    (posts.length === 0) ?
+                        (<p>No posts found.</p>) :
+
+                        posts.map(post => (
+                            (post.section===selectedItem)&&
+                            <BlogCard key={post._id} post={post} />
+                        ))}
+                
+            </Container>
+
+        </div>
     );
 }
 export default Endgame;

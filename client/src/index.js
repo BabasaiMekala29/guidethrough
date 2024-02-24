@@ -6,8 +6,8 @@ import reportWebVitals from './reportWebVitals';
 import { UserContextProvider } from './UserContext';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  // <UserContextProvider>
-    <div style={{ backgroundColor: '#f0eded',minHeight:'100vh'}}>
+  // <UserContextProvider>#f0eded
+    <div style={{ backgroundColor: '#ffffff',minHeight:'100vh'}}>
       <App />
     </div>
     // </UserContextProvider>

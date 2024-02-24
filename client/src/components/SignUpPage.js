@@ -14,7 +14,8 @@ import Container from '@mui/material/Container';
 import Header from './Header';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Navigate } from 'react-router-dom'
-import { useState } from 'react';
+import { useState,useContext } from 'react';
+import { UserContext } from '../UserContext';
 const defaultTheme = createTheme();
 
 export default function SignupPage() {
@@ -22,6 +23,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [redirect, setRedirect] = useState(false);
+  const { userInfo, setUserInfo, isLoading } = useContext(UserContext);
   const userNameErrorEle = document.getElementById('userNameError');
   const emailErrorEle = document.getElementById('emailError');
   const passwordErrorEle = document.getElementById('passwordError');
@@ -46,6 +48,7 @@ export default function SignupPage() {
 
       }
       if (data.user) {
+        setUserInfo(data.user);
         localStorage.setItem('user',JSON.stringify(data));
         setRedirect(true);
       }

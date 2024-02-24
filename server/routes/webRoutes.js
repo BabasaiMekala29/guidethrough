@@ -1,4 +1,5 @@
 const {Router} = require('express');
+const Post = require('../models/Post')
 const routeController = require('../controllers/routeControllers')
 const router = Router();
 
@@ -20,4 +21,7 @@ router.post('/login', routeController.login_post);
 router.post('/logout', routeController.logout_get);
 router.get('/profile',routeController.profile_get);
 router.post('/post',routeController.create_post);
+router.get('/category/:head/:subhead', routeController.get_posts);
+
+
 module.exports = router;

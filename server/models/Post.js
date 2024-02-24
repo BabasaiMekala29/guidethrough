@@ -2,10 +2,17 @@ const mongoose = require('mongoose');
 const {Schema, model} = mongoose;
 
 const postSchema = new Schema({
-    title: String,
-    description: String,
+    title: {
+        type: String,
+        required: [true, 'Please enter title'],
+    },
+    description: {
+        type: String,
+        required: [true, 'This field cannot be empty'],
+    },
     category: String,
-    subsection: String,
+    subcategory:String,
+    section: String,
     upvote: Number,
     downvote: Number,
     likes: Number,

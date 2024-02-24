@@ -9,6 +9,8 @@ import HomePage from './components/HomePage.js';
 import Endgamee from './components/Endgamee.js'
 import { useEffect,useContext } from 'react';
 import { UserContext } from './UserContext.js';
+import ExpandedPost from './components/ExpandedPost.js';
+import PostModal from './components/PostModal.js'
 // import { UserContextProvider } from './UserContext.js';
 import Vegs from './components/Vegs.js';
 function App() {
@@ -26,14 +28,14 @@ function App() {
         main: '#FFDB58'
       }
     },
-    typography:{
-      fontFamily:'Quicksand',
-      fontWeightLight: 400,
-      fontWeightRegular: 500,
-      fontWeightMedium: 600,
-      fontWeightBold: 700,
+    // typography:{
+    //   fontFamily:'Quicksand',
+    //   fontWeightLight: 400,
+    //   fontWeightRegular: 500,
+    //   fontWeightMedium: 600,
+    //   fontWeightBold: 700,
   
-    }
+    // }
   })
   return (
     <div className="App">
@@ -43,10 +45,12 @@ function App() {
         <Router>
             <Routes>
               <Route path='/' element={<HomePage />} />
-              <Route path='/signup' element={<ConditionalRoute a={<HomePage /> } b={<LoginPage />}  />} />
-              <Route path='/login' element={<ConditionalRoute a={<HomePage /> } b={<LoginPage />}  />} />
+              <Route path='/signup' element={<SignupPage />} />
+              <Route path='/login' element={<LoginPage /> }/>
               <Route path='/category' element={<CategoryPage />} />
-              <Route path='/category/:head/:subhead' element={<ConditionalRouteTwo />} />
+              <Route path='/category/:head/:subhead' element={<Endgamee />} />
+              <Route path='post/:postid' element={<ExpandedPost post={'qwe'} high={'qas'} />} />
+              <Route path='/category/:head/:subhead/:section/postt'  element={<ConditionalRouteTwo />}  />
               {/* <Route path='/end' element={<Endgame />} /> */}
               {/* <Route path='/category/:head/:subhead/post' element={<PostPage />} /> */}
               {/* <Route path='/category/:head/:subhead/:page' element={<SectionPage />} /> */}
@@ -73,7 +77,7 @@ function ConditionalRoute({a,b}) {
   return isLoggedIn ? a : b;
 }
 
-function ConditionalRouteTwo({a,b}) {
+function ConditionalRouteTwo() {
   const { userInfo, isLoading } = useContext(UserContext);
 
   if (isLoading) {
@@ -84,7 +88,7 @@ function ConditionalRouteTwo({a,b}) {
   console.log("conditional route ",userInfo);
   const uid = userInfo?.id;
   // Render Endgamee component if logged in, otherwise render LoginPage
-  return isLoggedIn ? <Endgamee uid={uid} /> : <LoginPage />
+  return isLoggedIn ? <PostModal /> : <HomePage />
 }
 
 

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Button, ButtonGroup, AppBar, Box, Toolbar, IconButton,Typography,InputBase,Badge,MenuItem,Menu,Avatar} from '@mui/material';
+import { Button, ButtonGroup, AppBar, Box, Toolbar, IconButton, Typography, InputBase, Badge, MenuItem, Menu, Avatar } from '@mui/material';
 import { styled, alpha } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import AccountCircle from '@mui/icons-material/AccountCircle';
@@ -8,10 +8,12 @@ import MoreIcon from '@mui/icons-material/MoreVert';
 import LoginIcon from '@mui/icons-material/Login';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LogoutIcon from '@mui/icons-material/Logout';
-import logoImg from '../images/logogt.jpg';
+import logoImg from '../images/logo.jpg';
 import { Link, Navigate } from 'react-router-dom';
 import { UserContext } from '../UserContext';
-import { useState,useEffect,useContext } from 'react';
+import BookmarksIcon from '@mui/icons-material/Bookmarks';
+import { useState, useEffect, useContext } from 'react';
+// import LogoutIcon from '@mui/icons-material/Logout';
 const Search = styled('div')(({ theme }) => ({
     position: 'relative',
     borderRadius: theme.shape.borderRadius,
@@ -53,10 +55,10 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 function Header() {
-    const [anchorEl, setAnchorEl] = React.useState(null); 
+    const [anchorEl, setAnchorEl] = React.useState(null);
     const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
-    const {userInfo, setUserInfo,isLoading} = useContext(UserContext);
-    
+    const { userInfo, setUserInfo, isLoading } = useContext(UserContext);
+
     if (isLoading) {
         return <div>Loading...</div>; // Render loading indicator if data is still being fetched
     }
@@ -69,7 +71,7 @@ function Header() {
     //     //   headers: {
     //     //     'Authorization': `Bearer ${user.token}` // Place the Authorization header here
     //     //   }
-          
+
     //     })
     //       .then(res => {
     //         res.json().then(userInfo => {
@@ -81,32 +83,32 @@ function Header() {
     //         console.error("Fetch error:", error);
     //       });
     //   }, []);
-    
-      function logout(){
-        fetch('http://127.0.0.1:4000/logout',{
-          credentials: "include",
-          method: "POST"
+
+    function logout() {
+        fetch('http://127.0.0.1:4000/logout', {
+            credentials: "include",
+            method: "POST"
         })
-        .then(()=>{
-            <Navigate to='/category' /> 
-           setUserInfo(null);
-            
-             
-            
-        })
+            .then(() => {
+                <Navigate to='/category' />
+                setUserInfo(null);
+
+
+
+            })
         // localStorage.removeItem('user');
-        
-        
-      }
-    
-      
+
+
+    }
+
+
     const isMenuOpen = Boolean(anchorEl);
     const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
 
     const handleProfileMenuOpen = (event) => {
         setAnchorEl(event.currentTarget);
     };
-      
+
 
     const handleMobileMenuClose = () => {
         setMobileMoreAnchorEl(null);
@@ -120,7 +122,7 @@ function Header() {
     const handleMobileMenuOpen = (event) => {
         setMobileMoreAnchorEl(event.currentTarget);
     };
-    
+
 
     const username = userInfo?.username;
     const searchStyle = {
@@ -143,8 +145,32 @@ function Header() {
             open={isMenuOpen}
             onClose={handleMenuClose}
         >
-            <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-            <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+            <MenuItem onClick={handleMenuClose}>
+                <IconButton
+                    size="large"
+                    edge="end"
+                    aria-label="account of current user"
+                    aria-controls={menuId}
+                    aria-haspopup="true"
+                    onClick={handleProfileMenuOpen}
+                    color="inherit"
+                >
+                    <BookmarksIcon />
+                </IconButton>
+                Saved
+            </MenuItem>
+            <MenuItem onClick={handleMenuClose}>
+                <IconButton
+                    size="large"
+                    aria-label="show 17 new notifications"
+                    color="inherit"
+                >
+                    <Badge badgeContent={17} color="error">
+                        <NotificationsIcon />
+                    </Badge>
+                </IconButton>
+                Notifications
+            </MenuItem>
         </Menu>
     );
 
@@ -164,95 +190,97 @@ function Header() {
             }}
             open={isMobileMenuOpen}
             onClose={handleMobileMenuClose}
+
         >
 
+
             {
-             !username&&   ( <> <Link to={'/login'} style={{textDecoration:"none", color:"inherit"}}>
-                <MenuItem >
+                !username && (<> <Link to={'/login'} style={{ textDecoration: "none", color: "inherit" }}>
+                    <MenuItem >
+                        <IconButton
+                            size="large"
+                            color="inherit"
+                        >
+                            <Badge color="error">
+                                <LoginIcon />
+                            </Badge>
+                        </IconButton>
+                        <p>Login</p>
+                    </MenuItem>
+                </Link>
+                    <Link to={'/signup'} style={{ textDecoration: "none", color: "inherit" }}>
+                        <MenuItem>
+                            <IconButton
+                                size="large"
+                                color="inherit"
+                            >
+                                <Badge color="error">
+                                    <PersonAddIcon />
+                                </Badge>
+                            </IconButton>
+                            <p>Sign up</p>
+                        </MenuItem>
+                    </Link> </>)}
+            {username && (<>
+                {/* <Typography sx={{color:"#fefefe"}}>{`Hello, ${username}`}</Typography> */}
+                <MenuItem onClick={logout}>
                     <IconButton
                         size="large"
                         color="inherit"
                     >
                         <Badge color="error">
-                            <LoginIcon />
-                        </Badge>
-                    </IconButton>
-                    <p>Login</p>
-                </MenuItem>
-            </Link>
-            <Link to={'/signup'} style={{textDecoration:"none", color:"inherit"}}>
-                <MenuItem>
-                    <IconButton
-                        size="large"
-                        color="inherit"    
-                    >
-                        <Badge color="error">
-                        <PersonAddIcon />
-                        </Badge>
-                    </IconButton>
-                    <p>Sign up</p>
-                </MenuItem>
-            </Link> </>) }   
-           { username && ( <>
-                <MenuItem onClick={logout}>
-                    <IconButton
-                        size="large"
-                        color="inherit"    
-                    >
-                        <Badge color="error">
-                        <LogoutIcon />
+                            <LogoutIcon />
                         </Badge>
                     </IconButton>
                     <p>Logout</p>
                 </MenuItem>
-            
-            <MenuItem>
-                <IconButton
-                    size="large"
-                    color="inherit"
-                >
-                    <Badge badgeContent={17} color="error">
-                        <NotificationsIcon />
-                    </Badge>
-                </IconButton>
-                <p>Notifications</p>
-            </MenuItem>
-            <MenuItem onClick={handleProfileMenuOpen}>
-                <IconButton
-                    size="large"
-                    aria-label="account of current user"
-                    aria-controls="primary-search-account-menu"
-                    aria-haspopup="true"
-                    color="inherit"
-                >
-                    <AccountCircle />
-                </IconButton>
-                <p>Profile</p>
-            </MenuItem> </>)}
+
+                <MenuItem>
+                    <IconButton
+                        size="large"
+                        color="inherit"
+                    >
+                        <Badge badgeContent={17} color="error">
+                            <NotificationsIcon />
+                        </Badge>
+                    </IconButton>
+                    <p>Notifications</p>
+                </MenuItem>
+                <MenuItem onClick={handleProfileMenuOpen}>
+                    <IconButton
+                        size="large"
+                        aria-label="account of current user"
+                        aria-controls="primary-search-account-menu"
+                        aria-haspopup="true"
+                        color="inherit"
+                    >
+                        <BookmarksIcon />
+                    </IconButton>
+                    <p>Saved</p>
+                </MenuItem> </>)}
         </Menu>
     );
-     
+
     return (
-        
         <Box>
-            <AppBar position="static" elevation={0}>
+            <AppBar sx={{ position: "sticky", top: '0px' }} elevation={0}>
                 <Toolbar sx={{ display: "flex", justifyContent: "space-between" }} >
                     <Box sx={{ display: 'flex' }}>
-                    <Link to={'/'}>
-                        <Avatar src={logoImg}  />
-                    </Link>
-                    
-                        <Search sx={{ display: { xs: 'none', md: 'block' }}} >
+                        <Link to={'/'}>
+                            <Avatar src={logoImg} />
+                        </Link>
+
+                        <Search sx={{ display: { xs: 'none', md: 'block' } }} >
                             <SearchIconWrapper >
                                 <SearchIcon />
                             </SearchIconWrapper>
                             <StyledInputBase
-                                sx={{ width:600 }}
+                                sx={{ width: 600 }}
                                 placeholder="Search…"
                                 inputProps={{ 'aria-label': 'search' }}
                             />
                         </Search>
-                        <Search sx={{ display: { xs: 'block', md: 'none' }}}>
+                        <Search sx={{ display: { xs: 'block', md: 'none' } }}>
                             <SearchIconWrapper >
                                 <SearchIcon />
                             </SearchIconWrapper>
@@ -262,28 +290,19 @@ function Header() {
                             />
                         </Search>
                     </Box>
-                    <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+                    <Box sx={{ display: { xs: 'none', md: 'flex', alignItems: 'center' } }}>
                         {
-                            !username&& (
+                            !username && (
                                 <>
-                                    <Button href='/login' variant="text"  size="small" sx={{color:'#fefefe',marginRight:'4px'}}>login</Button>
-                                    <Button href='/signup' variant="text" size="small" sx={{color:"#fefefe"}}>sign up</Button> 
+                                    <Button href='/login' variant="text" size="small" sx={{ color: '#fefefe', marginRight: '4px' }}>login</Button>
+                                    <Button href='/signup' variant="text" size="small" sx={{ color: "#fefefe" }}>sign up</Button>
                                 </>
                             )
-                    } 
-                             {
-                            username&&(
+                        }
+                        {
+                            username && (
                                 <>
-                                    <Button onClick={logout} variant="text" size="small" sx={{color:"#fefefe"}}>logout</Button>                       
-                                    <IconButton
-                                        size="large"
-                                        aria-label="show 17 new notifications"
-                                        color="inherit"
-                                    >
-                                        <Badge badgeContent={17} color="error">
-                                            <NotificationsIcon />
-                                        </Badge>
-                                    </IconButton>
+                                    <Typography sx={{ color: "#fefefe" }}>{`Hello, ${username}`}</Typography>
                                     <IconButton
                                         size="large"
                                         edge="end"
@@ -295,11 +314,16 @@ function Header() {
                                     >
                                         <AccountCircle />
                                     </IconButton>
-                                 </>
+                                    <Button onClick={logout} variant="text" size="small" sx={{ color: "#fefefe" }}>
+                                        <LogoutIcon />
+                                    </Button>
+
+                                </>
                             )
-                            } 
+                        }
                     </Box>
-                    <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
+                    <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center' }}>
+                        {username && <Typography sx={{ color: "#fefefe" }}>{`HELLO, ${username.toUpperCase()} !`}</Typography>}
                         <IconButton
                             size="large"
                             aria-label="show more"
