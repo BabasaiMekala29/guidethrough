@@ -70,6 +70,7 @@ module.exports.login_post = async (req, res) => {
         const token = createToken(user._id, user.username);
         // console.log("token",token)
         res.cookie('jwt', token, { httpOnly: true, maxAge: maxAge * 1000 });
+        // console.log(user);
         res.status(200).json({ user, token });
     }
     catch (err) {
@@ -170,6 +171,60 @@ module.exports.get_posts = async (req, res) => {
     }
         // console.log(posts)
         // res.json(posts);
-        
-    
+}
+
+module.exports.get_userposts = async (req,res) =>{
+    const {id} = req.params;
+    try{
+        const posts = await Post.find({ 
+            author: id 
+        })
+        res.json({posts});
+    }
+    catch(err){
+        res.status(400).json({ err });
+    }
+
+
+}
+
+module.exports.delete_post = async (req,res) =>{
+    const {id} = req.params;
+    try {
+        // Check if the post exists
+        const post = await Post.findById(id);
+        if (!post) {
+            return res.status(404).json({ error: 'Post not found' });
+        }
+
+        // If the post exists, delete it
+        await Post.findByIdAndDelete(id);
+        res.json({ message: 'Post deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting post:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+module.exports.edit_post = async (req,res)=>{
+    const {id} = req.params;
+    const { title, description } = req.body;
+    // console.log(title,description)
+    try {
+        // Find the post by ID
+        let post = await Post.findById(id);
+        if (!post) {
+            return res.status(404).json({ error: 'Post not found' });
+        }
+
+        // Update the post with the new data
+        post.title = title;
+        post.description = description;
+        await post.save();
+
+        res.json(post); // Send back the updated post
+    } catch (error) {
+        console.error('Error updating post:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 }

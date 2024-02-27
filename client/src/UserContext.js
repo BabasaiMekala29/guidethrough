@@ -18,7 +18,7 @@ export const UserContext = createContext({});
 export function UserContextProvider({ children }) {
     const [userInfo, setUserInfo] = useState(null);
     const [isLoading, setIsLoading] = useState(true); // Add loading state
-
+    // const [postInfo,setPostInfo] = useState(null);
     useEffect(() => {
         fetch('http://127.0.0.1:4000/profile', {
             credentials: 'include',

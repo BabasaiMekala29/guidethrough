@@ -18,10 +18,6 @@ function HomePage() {
           
         }}
       >
-       
-
-
-
           <div className="animated-text">
             <div>G<span></span>
               <div>Through </div>

@@ -11,13 +11,17 @@ import { useEffect,useContext } from 'react';
 import { UserContext } from './UserContext.js';
 import ExpandedPost from './components/ExpandedPost.js';
 import PostModal from './components/PostModal.js'
+import UserPosts from './components/UserPosts.js';
 // import { UserContextProvider } from './UserContext.js';
 import Vegs from './components/Vegs.js';
+import UserExpandedPost from './components/UserExpandedPost.js';
+import { PostContextProvider } from './PostContext.js';
 function App() {
   // const {userInfo} = useContext(UserContext);
   // const isLoggedIn = !!userInfo?.username;
   // const username = userInfo?.username;
   // console.log("app ",isLoggedIn);
+  const { postInfo } = useContext(UserContext);
   const theme = createTheme({
     palette: {
       primary: {
@@ -42,6 +46,7 @@ function App() {
       <ThemeProvider theme={theme}>
         
         <UserContextProvider>
+          <PostContextProvider>
         <Router>
             <Routes>
               <Route path='/' element={<HomePage />} />
@@ -49,13 +54,16 @@ function App() {
               <Route path='/login' element={<LoginPage /> }/>
               <Route path='/category' element={<CategoryPage />} />
               <Route path='/category/:head/:subhead' element={<Endgamee />} />
-              <Route path='post/:postid' element={<ExpandedPost post={'qwe'} high={'qas'} />} />
-              <Route path='/category/:head/:subhead/:section/postt'  element={<ConditionalRouteTwo />}  />
+              {/* <Route path='post/:postid' element={<ConditionalRouteTwo a={<ExpandedPost />} b={<HomePage />} />}  /> */}
+              <Route path='/category/:head/:subhead/:section/postt'  element={<ConditionalRouteTwo a={<PostModal />} b={<HomePage />} />}  />
+              <Route path='/user/posts' element={<UserPosts />} />
+              {/* <Route path='/userpost/:id' element={<UserExpandedPost />} /> */}
               {/* <Route path='/end' element={<Endgame />} /> */}
               {/* <Route path='/category/:head/:subhead/post' element={<PostPage />} /> */}
               {/* <Route path='/category/:head/:subhead/:page' element={<SectionPage />} /> */}
             </Routes>
         </Router>
+        </PostContextProvider>
             </UserContextProvider>
         
       </ThemeProvider>
@@ -77,7 +85,7 @@ function ConditionalRoute({a,b}) {
   return isLoggedIn ? a : b;
 }
 
-function ConditionalRouteTwo() {
+function ConditionalRouteTwo({a,b}) {
   const { userInfo, isLoading } = useContext(UserContext);
 
   if (isLoading) {
@@ -88,7 +96,7 @@ function ConditionalRouteTwo() {
   console.log("conditional route ",userInfo);
   const uid = userInfo?.id;
   // Render Endgamee component if logged in, otherwise render LoginPage
-  return isLoggedIn ? <PostModal /> : <HomePage />
+  return isLoggedIn ? a : b
 }
 
 

@@ -202,9 +202,9 @@ function PostModal() {
                 open={open}
                 onClose={handleClose}
                 fullWidth
-                PaperProps={{
-                    component: 'form',
-                }}
+                // PaperProps={{
+                //     component: 'form',
+                // }}
             >
                 <DialogTitle>Create Post</DialogTitle>
                 <DialogContent>

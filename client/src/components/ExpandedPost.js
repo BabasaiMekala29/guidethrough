@@ -1,6 +1,7 @@
 import { Container } from '@mui/material'
-import React, { useState,useContext } from 'react'
+import React, { useState,useEffect,useContext } from 'react'
 import { styled } from '@mui/material/styles';
+import { format } from 'date-fns';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import CardMedia from '@mui/material/CardMedia';
@@ -21,13 +22,19 @@ import Upvote from '../images/upvote.png';
 import Downvote from '../images/downvote.png';
 import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import BookmarksOutlinedIcon from '@mui/icons-material/BookmarksOutlined';
-import { UserContext } from '../UserContext';
+import { useParams } from 'react-router-dom';
 
-export default function ExpandedPost({post,high}) {
-    console.log(post,high);
+import { UserContext } from '../UserContext';
+import { PostContext } from '../PostContext';
+export default function ExpandedPost() {
+    const {postInfo} = useContext(PostContext);
+    console.log(postInfo);
+    // const [postData,setPostData] = useState([])
     const [saveStatus,setSaveStatus] = useState(false);
     const [likeStatus,setLikeStatus] = useState(false);
-    const { userInfo } = useContext(UserContext);
+
+    
+
     const ExpandMore = styled((props) => {
         const { expand, ...other } = props;
         return <IconButton {...other} />;
@@ -43,7 +50,7 @@ export default function ExpandedPost({post,high}) {
     const handleExpandClick = () => {
         setExpanded(!expanded);
     };
-    
+    // console.log(postData.reqPost?.title)
     return (
         <>
             <Header />
@@ -52,8 +59,8 @@ export default function ExpandedPost({post,high}) {
                 <CardHeader
                     avatar={
                         <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
-                            {/* {post.author.username[0].toUpperCase()} */}
-                            X
+                            {postInfo.author.username[0].toUpperCase()}
+                            {/* X */}
                         </Avatar>
                     }
                     // action={
@@ -61,29 +68,24 @@ export default function ExpandedPost({post,high}) {
                     //     <MoreVertIcon />
                     //   </IconButton>
                     // }
-                    title="Shrimp and Chorizo Paella"
-                    subheader="September 14, 2016"
+                    title={postInfo.author.username}
+                    subheader={format(new Date(postInfo.createdAt),"dd-MMM-yyyy")}
                 />
 
                 <CardContent>
+                    <Typography variant='h6'>{postInfo.title}</Typography>
                     <Typography variant="body2" color="text.secondary">
-                        This impressive paella is a perfect party dish and a fun meal to cook
-                        together with your guests. Add 1 cup of frozen peas along with the mussels,
-                        if you like.This impressive paella is a perfect party dish and a fun meal to cook
-                        together with your guests. Add 1 cup of frozen peas along with the mussels,
-                        if you like.This impressive paella is a perfect party dish and a fun meal to cook
-                        together with your guests. Add 1 cup of frozen peas along with the mussels,
-                        if you like.This impressive paella is a perfect party dish and a fun meal to cook
-                        together with your guests. Add 1 cup of frozen peas along with the mussels,
-                        if you like.
+                        {postInfo.description}
                     </Typography>
                 </CardContent>
                 <CardActions disableSpacing>
-                    <IconButton aria-label="add to favorites">
+                    <IconButton aria-label="add to favorites" sx={{display:'flex'}}>
                         <img src={Upvote} height={'36px'} width={'36px'} />
+                        <Typography>{postInfo.upvote}</Typography>
                     </IconButton>
-                    <IconButton aria-label="share">
+                    <IconButton aria-label="share" sx={{display:'flex'}}>
                         <img src={Downvote} height={'36px'} width={'36px'} />
+                        <Typography>{postInfo.downvote}</Typography>
                     </IconButton>
                     <IconButton aria-label="add to favorites">
                     {

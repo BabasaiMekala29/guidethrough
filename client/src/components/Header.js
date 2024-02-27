@@ -123,8 +123,15 @@ function Header() {
         setMobileMoreAnchorEl(event.currentTarget);
     };
 
+    const showPosts = (e) =>{
+        handleMenuClose();
+    }
+
 
     const username = userInfo?.username;
+    const userid = userInfo?.id;
+    console.log(userid)
+    
     const searchStyle = {
         width: 600
     }
@@ -159,6 +166,25 @@ function Header() {
                 </IconButton>
                 Saved
             </MenuItem>
+            
+            <MenuItem onClick={()=>showPosts()}>
+            <Link to={'/user/posts'} style={{ textDecoration: "none", color: "inherit", fontSize:'20px', fontWeight:'500' }}>
+                    <IconButton
+                        size="large"
+                        edge="end"
+                        aria-label="account of current user"
+                        aria-controls={menuId}
+                        aria-haspopup="true"
+                        onClick={handleProfileMenuOpen}
+                        color="inherit"
+                    >
+                        <BookmarksIcon />
+                        <p>My Posts</p>
+                    </IconButton>
+                    </Link>
+                
+            </MenuItem>
+            
             <MenuItem onClick={handleMenuClose}>
                 <IconButton
                     size="large"
@@ -195,6 +221,7 @@ function Header() {
 
 
             {
+                
                 !username && (<> <Link to={'/login'} style={{ textDecoration: "none", color: "inherit" }}>
                     <MenuItem >
                         <IconButton
@@ -257,7 +284,23 @@ function Header() {
                         <BookmarksIcon />
                     </IconButton>
                     <p>Saved</p>
-                </MenuItem> </>)}
+                </MenuItem> 
+                <MenuItem onClick={()=>showPosts()}>
+                    <Link to={'/user/posts'} style={{ textDecoration: "none", color: "inherit", fontSize:'20px', fontWeight:'500' }} >
+                        <IconButton
+                            size="large"
+                            aria-label="account of current user"
+                            aria-controls="primary-search-account-menu"
+                            aria-haspopup="true"
+                            color="inherit"
+                        >
+                            <BookmarksIcon />
+                            <p>My Posts</p>
+                        </IconButton>
+                        
+                    </Link>
+                </MenuItem> 
+                </>)}
         </Menu>
     );
 

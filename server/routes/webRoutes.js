@@ -22,6 +22,7 @@ router.post('/logout', routeController.logout_get);
 router.get('/profile',routeController.profile_get);
 router.post('/post',routeController.create_post);
 router.get('/category/:head/:subhead', routeController.get_posts);
-
-
+router.get('/user/:id',routeController.get_userposts);
+router.get('/post/:id',routeController.delete_post);
+router.put('/edit/post/:id',routeController.edit_post)
 module.exports = router;
