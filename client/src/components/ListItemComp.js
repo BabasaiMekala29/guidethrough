@@ -11,7 +11,17 @@ import StarBorder from '@mui/icons-material/StarBorder';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { Container, Typography } from '@mui/material';
 import Masonry from 'react-masonry-css';
-
+import LuggageIcon from '@mui/icons-material/Luggage';
+import FastfoodIcon from '@mui/icons-material/Fastfood';
+import SchoolIcon from '@mui/icons-material/School';
+import RoofingIcon from '@mui/icons-material/Roofing';
+import MedicationLiquidIcon from '@mui/icons-material/MedicationLiquid';
+import PetsIcon from '@mui/icons-material/Pets';
+import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
+import AutoStoriesIcon from '@mui/icons-material/AutoStories';
+import SmokeFreeIcon from '@mui/icons-material/SmokeFree';
+import HealingIcon from '@mui/icons-material/Healing';
+import GavelIcon from '@mui/icons-material/Gavel';
 export default function NestedList() {
   const categories = {
     Travel: ['Solo Travel', 'Family Travel', 'Backpacking'],
@@ -34,8 +44,8 @@ export default function NestedList() {
     
 
   };
-  const iconArr = [<StarBorder />,<StarBorder />,<StarBorder />,<StarBorder />,<StarBorder />,<StarBorder />,<StarBorder />,
-  <StarBorder />,<StarBorder />,<StarBorder />,<StarBorder />,<StarBorder />,<StarBorder />,<StarBorder />,<StarBorder />,<StarBorder />,<StarBorder />]
+  const iconArr = [<LuggageIcon sx={{color:'black'}} />,<FastfoodIcon />,<StarBorder />,<SchoolIcon />,<StarBorder />,<RoofingIcon />,<MedicationLiquidIcon />,
+  <PetsIcon />,<StarBorder />,<CurrencyRupeeIcon />,<AutoStoriesIcon />,<StarBorder />,<StarBorder />,<SmokeFreeIcon />,<HealingIcon />,<StarBorder />,<GavelIcon />]
   const catKeys = Object.keys(categories);
  
   const [openStates, setOpenStates] = React.useState({
@@ -93,7 +103,7 @@ export default function NestedList() {
           <Container key={catName}>
             <ListItemButton onClick={() => handleClick(catName)}>
               <ListItemIcon>
-                {iconArr[index]}
+                {iconArr[index] }
               </ListItemIcon>
               <ListItemText primary={catName} />
               {openStates[catName] ? <ExpandLess /> : <ExpandMore />}

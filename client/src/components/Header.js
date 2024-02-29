@@ -13,6 +13,8 @@ import { Link, Navigate } from 'react-router-dom';
 import { UserContext } from '../UserContext';
 import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import { useState, useEffect, useContext } from 'react';
+import Snackbar from '@mui/material/Snackbar';
+import CloseIcon from '@mui/icons-material/Close';
 // import LogoutIcon from '@mui/icons-material/Logout';
 const Search = styled('div')(({ theme }) => ({
     position: 'relative',
@@ -58,15 +60,21 @@ function Header() {
     const [anchorEl, setAnchorEl] = React.useState(null);
     const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
     const { userInfo, setUserInfo, isLoading } = useContext(UserContext);
-
+    const [isLoggedOut, setIsLoggedOut] = useState(false);
     if (isLoading) {
         return <div>Loading...</div>; // Render loading indicator if data is still being fetched
     }
+    const handleSnackbarClose = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+        setIsLoggedOut(false);
+    };
     // useEffect(() => {
     //     // const userData = localStorage.getItem('user');
     //     // const user = userData ? JSON.parse(userData) : null;
     //     // console.log("jnwkj",user.token)
-    //     fetch('http://127.0.0.1:4000/profile', {
+    //     fetch('http://127.0.0.1:5000/profile', {
     //       credentials: 'include',
     //     //   headers: {
     //     //     'Authorization': `Bearer ${user.token}` // Place the Authorization header here
@@ -85,16 +93,14 @@ function Header() {
     //   }, []);
 
     function logout() {
-        fetch('http://127.0.0.1:4000/logout', {
+        fetch('http://127.0.0.1:5000/logout', {
             credentials: "include",
             method: "POST"
         })
             .then(() => {
-                <Navigate to='/category' />
+                // <Navigate to='/category' />
+                setIsLoggedOut(true); 
                 setUserInfo(null);
-
-
-
             })
         // localStorage.removeItem('user');
 
@@ -161,10 +167,12 @@ function Header() {
                     aria-haspopup="true"
                     onClick={handleProfileMenuOpen}
                     color="inherit"
+                    href='/user/savedposts'
                 >
                     <BookmarksIcon />
+                    Saved
                 </IconButton>
-                Saved
+                
             </MenuItem>
             
             <MenuItem onClick={()=>showPosts()}>
@@ -280,10 +288,12 @@ function Header() {
                         aria-controls="primary-search-account-menu"
                         aria-haspopup="true"
                         color="inherit"
+                        href='/user/savedposts'
                     >
                         <BookmarksIcon />
+                        Saved
                     </IconButton>
-                    <p>Saved</p>
+                
                 </MenuItem> 
                 <MenuItem onClick={()=>showPosts()}>
                     <Link to={'/user/posts'} style={{ textDecoration: "none", color: "inherit", fontSize:'20px', fontWeight:'500' }} >
@@ -305,6 +315,7 @@ function Header() {
     );
 
     return (
+        <>
         <Box>
             <AppBar sx={{ position: "sticky", top: '0px' }} elevation={0}>
                 <Toolbar sx={{ display: "flex", justifyContent: "space-between" }} >
@@ -383,6 +394,27 @@ function Header() {
             {renderMobileMenu}
             {renderMenu}
         </Box>
+        <Snackbar
+        anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'left',
+        }}
+        open={isLoggedOut}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        message="You are logged out"
+        action={
+            <>
+            <IconButton href='/login' size="small" aria-label="close" color="inherit" onClick={handleSnackbarClose}>
+                <LoginIcon sx={{marginLeft:'6px',color:'#ffffff'}} />
+            </IconButton>
+            <IconButton size="small" aria-label="close" color="inherit" onClick={handleSnackbarClose}>
+                <CloseIcon fontSize="small" />
+            </IconButton>
+            </>
+        }
+    />
+    </>
     );
 }
 

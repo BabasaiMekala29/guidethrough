@@ -13,7 +13,7 @@ import ExpandedPost from './components/ExpandedPost.js';
 import PostModal from './components/PostModal.js'
 import UserPosts from './components/UserPosts.js';
 // import { UserContextProvider } from './UserContext.js';
-import Vegs from './components/Vegs.js';
+import SavedPosts from './components/SavedPosts.js';
 import UserExpandedPost from './components/UserExpandedPost.js';
 import { PostContextProvider } from './PostContext.js';
 function App() {
@@ -57,6 +57,7 @@ function App() {
               {/* <Route path='post/:postid' element={<ConditionalRouteTwo a={<ExpandedPost />} b={<HomePage />} />}  /> */}
               <Route path='/category/:head/:subhead/:section/postt'  element={<ConditionalRouteTwo a={<PostModal />} b={<HomePage />} />}  />
               <Route path='/user/posts' element={<UserPosts />} />
+              <Route path='/user/savedposts' element={<SavedPosts />} />
               {/* <Route path='/userpost/:id' element={<UserExpandedPost />} /> */}
               {/* <Route path='/end' element={<Endgame />} /> */}
               {/* <Route path='/category/:head/:subhead/post' element={<PostPage />} /> */}

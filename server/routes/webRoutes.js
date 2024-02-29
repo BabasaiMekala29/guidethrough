@@ -24,5 +24,11 @@ router.post('/post',routeController.create_post);
 router.get('/category/:head/:subhead', routeController.get_posts);
 router.get('/user/:id',routeController.get_userposts);
 router.get('/post/:id',routeController.delete_post);
-router.put('/edit/post/:id',routeController.edit_post)
+router.put('/edit/post/:id',routeController.edit_post);
+router.put('/post/:postid/upvote',routeController.put_upvote);
+router.put('/post/:postid/downvote',routeController.put_downvote);
+router.put('/post/:postid/like',routeController.put_like);
+router.put('/post/:postid/save',routeController.save_post);
+router.get('/savedposts/:id',routeController.get_savedposts);
+router.put('/unsavepost/:postid',routeController.unsavepost);
 module.exports = router;

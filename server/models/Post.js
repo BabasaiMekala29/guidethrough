@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const {Schema, model} = mongoose;
+const { Schema, model } = mongoose;
 
 const postSchema = new Schema({
     title: {
@@ -11,16 +11,25 @@ const postSchema = new Schema({
         required: [true, 'This field cannot be empty'],
     },
     category: String,
-    subcategory:String,
+    subcategory: String,
     section: String,
     upvote: Number,
     downvote: Number,
     likes: Number,
-    author: {type:Schema.Types.ObjectId, ref:'User'}
-},{
+    upvotes: {
+        type: [String], // This specifies that 'arrayField' should be an array of strings
+    },
+    downvotes: {
+        type: [String], // This specifies that 'arrayField' should be an array of strings
+    },
+    loves: {
+        type: [String], // This specifies that 'arrayField' should be an array of strings
+    },
+    author: { type: Schema.Types.ObjectId, ref: 'User' }
+}, {
     timestamps: true
 });
 
-const PostModel = model('Post',postSchema);
+const PostModel = model('Post', postSchema);
 
 module.exports = PostModel;

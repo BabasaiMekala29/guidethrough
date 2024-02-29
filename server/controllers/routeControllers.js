@@ -1,10 +1,11 @@
 const User = require('../models/User')
 const Post = require('../models/Post')
+const Bookmarks = require('../models/Bookmarks')
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const { trusted } = require('mongoose');
 function handleErrors(err) {
-    let errors = { username: '', email: '', password: '',title:'',description:'' };
+    let errors = { username: '', email: '', password: '', title: '', description: '' };
 
     if (err.message === 'Incorrect username') {
         errors.email = 'user not registered'
@@ -25,12 +26,12 @@ function handleErrors(err) {
         return errors;
     }
     // console.log(err.message)
-    if(err.message.includes('Post validation failed')){
+    if (err.message.includes('Post validation failed')) {
         Object.values(err.errors).forEach(({ properties }) => {
             errors[properties.path] = properties.message;
         })
     }
-    
+
     if (err.message.includes('user validation failed')) {
         // console.log(err.message)
         Object.values(err.errors).forEach(({ properties }) => {
@@ -122,29 +123,29 @@ module.exports.create_post = async (req, res) => {
         }
         //   console.log(info)
         // console.log(req.body);
-        try{
+        try {
             const postDoc = await Post.create({
                 ...req.body,
                 author: info.id
             })
-            res.json({postDoc})
+            res.json({ postDoc })
         }
-        catch(err){
+        catch (err) {
             const errors = handleErrors(err);
             res.status(400).json({ errors });
         }
-        
+
     })
 }
 
 module.exports.get_posts = async (req, res) => {
     try {
-        const { head,subhead } = req.params;
+        const { head, subhead } = req.params;
 
         // Query posts based on category and subcategory
-        const posts = await Post.find({ 
-            category: head, 
-            subcategory: subhead 
+        const posts = await Post.find({
+            category: head,
+            subcategory: subhead
         })
         const authorIds = posts.map(post => post.author);
 
@@ -169,27 +170,27 @@ module.exports.get_posts = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-        // console.log(posts)
-        // res.json(posts);
+    // console.log(posts)
+    // res.json(posts);
 }
 
-module.exports.get_userposts = async (req,res) =>{
-    const {id} = req.params;
-    try{
-        const posts = await Post.find({ 
-            author: id 
+module.exports.get_userposts = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const posts = await Post.find({
+            author: id
         })
-        res.json({posts});
+        res.json({ posts });
     }
-    catch(err){
+    catch (err) {
         res.status(400).json({ err });
     }
 
 
 }
 
-module.exports.delete_post = async (req,res) =>{
-    const {id} = req.params;
+module.exports.delete_post = async (req, res) => {
+    const { id } = req.params;
     try {
         // Check if the post exists
         const post = await Post.findById(id);
@@ -206,8 +207,8 @@ module.exports.delete_post = async (req,res) =>{
     }
 }
 
-module.exports.edit_post = async (req,res)=>{
-    const {id} = req.params;
+module.exports.edit_post = async (req, res) => {
+    const { id } = req.params;
     const { title, description } = req.body;
     // console.log(title,description)
     try {
@@ -227,4 +228,152 @@ module.exports.edit_post = async (req,res)=>{
         console.error('Error updating post:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
+}
+
+module.exports.put_upvote = async (req, res) => {
+    const { postid } = req.params;
+    const { upvote, user } = req.body;
+    const post = await Post.findById(postid);
+    try {
+        if (!post) {
+            return res.status(404).json({ error: 'Post not found' });
+        }
+
+        // Update the post with the new data
+        if (!post.upvotes.includes(user)) {
+            post.upvote = upvote
+            post.upvotes.push(user);
+            await post.save();
+        }
+        res.json(post);
+
+    }
+    catch (error) {
+        console.error('Error updating post:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+
+}
+
+module.exports.put_downvote = async (req, res) => {
+    const { postid } = req.params;
+    const { downvote, user } = req.body;
+    const post = await Post.findById(postid);
+    try {
+        if (!post) {
+            return res.status(404).json({ error: 'Post not found' });
+        }
+
+        // Update the post with the new data
+        if (!post.downvotes.includes(user)) {
+            post.downvote = downvote
+            post.downvotes.push(user);
+            await post.save();
+        }
+        res.json(post);
+    }
+    catch (error) {
+        console.error('Error updating post:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+
+}
+
+module.exports.put_like = async (req, res) => {
+    const { postid } = req.params;
+    const { likes, user } = req.body;
+    const post = await Post.findById(postid);
+    try {
+        if (!post) {
+            return res.status(404).json({ error: 'Post not found' });
+        }
+
+        // Update the post with the new data
+        if (!post.loves.includes(user)) {
+            post.likes = likes
+            post.loves.push(user);
+            await post.save();
+        }
+        res.json(post);
+    }
+    catch (error) {
+        console.error('Error updating post:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+
+}
+
+module.exports.save_post = async (req, res) => {
+    const { postid } = req.params;
+    const { user } = req.body;
+    try {
+        const postDoc = await Post.findById(postid);
+        const userDoc = await User.findById(user);
+        const doc = await Bookmarks.findOne({
+            userinfo: user
+        })
+        // console.log(doc);
+        // console.log('ejk',!doc)
+        if (!doc) {
+            console.log('ijenejk')
+            const newDoc = await Bookmarks.create({
+                userinfo: user,
+                saves: [postDoc],
+            })
+
+            res.json(newDoc);
+            console.log("newdoc ", newDoc)
+        }
+
+        else {
+            if (!doc.saves.includes(postDoc._id)) {
+                doc.saves.push(postDoc);
+                await doc.save();
+            }
+            res.json(doc);
+        }
+
+    }
+    catch (err) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+module.exports.get_savedposts = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const posts = await Bookmarks.findOne({
+            userinfo: id
+        }).populate('saves', ['title', 'description', 'category', 'subcategory', 'section', 'createdAt']);
+        console.log("saves ",posts.saves);
+        res.json(posts.saves);
+    }
+    catch (err) {
+        res.status(400).json({ err });
+    }
+}
+
+module.exports.unsavepost = async (req, res) => {
+    const { postid } = req.params;
+    const { id } = req.body;
+    console.log(id);
+    try{
+        const posts = await Bookmarks.findOne({
+            userinfo: id
+        })
+        const index = posts.saves.findIndex(post => post._id.toString() === postid);
+        if (index !== -1) {
+            posts.saves.splice(index, 1);
+            await posts.save();
+        }
+        console.log("index ",index);
+        
+        res.json(posts.saves);
+    }
+    catch (err) {
+        res.status(400).json({ error: 'Internal server error' });
+    }
+    
+
+
 }

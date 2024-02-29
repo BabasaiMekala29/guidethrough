@@ -14,28 +14,40 @@ import Header from './Header';
 import BlogCard from './BlogCard';
 import { Link, useParams } from 'react-router-dom';
 import PostModal from './PostModal';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { UserContext } from '../UserContext';
+import Snackbar from '@mui/material/Snackbar';
+import CloseIcon from '@mui/icons-material/Close';
 
 const pages = ['Blog', "Dont's", 'Tips', 'Q&A'];
 
 function Endgame() {
+    const { userInfo } = useContext(UserContext);
+    console.log(userInfo);
     const { head, subhead } = useParams();
     const [open, setOpen] = React.useState(false);
     const [selectedItem, setSelectedItem] = React.useState('Blog');
     const [anchorElNav, setAnchorElNav] = React.useState(null);
     const [posts, setPosts] = useState([]);
-
+    const [sectionCounts, setSectionCounts] = useState({}); // Object to store counts for each section
+    const [openSnack, setOpenSnack] = React.useState(false);
     useEffect(() => {
         const fetchPosts = async () => {
             console.log("hiii")
             try {
-                const response = await fetch(`http://127.0.0.1:4000/category/${head}/${subhead}`);
+                const response = await fetch(`http://127.0.0.1:5000/category/${head}/${subhead}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch posts');
                 }
                 const data = await response.json();
                 console.log(data);
                 setPosts(data);
+                // Calculate counts for each section
+                const counts = {};
+                data.forEach(post => {
+                    counts[post.section] = (counts[post.section] || 0) + 1;
+                });
+                setSectionCounts(counts);
 
             } catch (error) {
                 console.log(error);
@@ -47,11 +59,70 @@ function Endgame() {
 
     const handleClickOpen = () => {
         setOpen(true);
-        console.log(selectedItem);
+    //     if (!userInfo) {
+    //         console.log("ieunjri")
+    //         handleClickSnack();
+        
+        
+    //     return (
+    //         <div>
+    //             {/* <h1>hbje</h1> */}
+    //             <Snackbar
+    //                 open={openSnack}
+    //                 autoHideDuration={6000}
+    //                 onClose={handleCloseSnack}
+    //                 message="Note archived"
+    //                 action={action}
+    //             />
+    //         </div>
+    //     )
+    // }
+    if (!userInfo?.username) {
+        setOpenSnack(true);
+        return;
+    }
         return (
             <PostModal />
         )
     };
+    
+    const handleCloseSnack = (event, reason) => {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        setOpenSnack(false);
+    };
+    // const [openSnack, setOpenSnack] = React.useState(false);
+
+    // const handleClickSnack = () => {
+    //     setOpenSnack(true);
+    // };
+
+    // const handleCloseSnack = (event, reason) => {
+    //     if (reason === 'clickaway') {
+    //         return;
+    //     }
+
+    //     setOpenSnack(false);
+    // };
+
+    // const action = (
+    //     <React.Fragment>
+    //         <Button color="secondary" size="small" onClick={handleCloseSnack}>
+    //             UNDO
+    //         </Button>
+    //         <IconButton
+    //             size="small"
+    //             aria-label="close"
+    //             color="inherit"
+    //             onClick={handleCloseSnack}
+    //         >
+    //             <CloseIcon fontSize="small" />
+    //         </IconButton>
+    //     </React.Fragment>
+    // );
+    
 
     const handleOpenNavMenu = (event) => {
         setAnchorElNav(event.currentTarget);
@@ -107,17 +178,23 @@ function Endgame() {
                                 >
                                     {pages.map((page) => (
                                         <MenuItem key={page} onClick={() => handleBgColor(page)} sx={{ backgroundColor: selectedItem === page ? 'orange' : 'inherit' }}>
-                                            <Typography textAlign="center">{page}</Typography>
+                                            <Typography textAlign="center">{page}{sectionCounts[page] !== undefined ? ` (${sectionCounts[page]})`: ` (0)`}</Typography>
                                         </MenuItem>
                                     ))}
                                 </Menu>
-
-                                <DriveFileRenameOutlineIcon onClick={handleClickOpen} sx={{ display: { xs: 'flex', md: 'none' }, mr: 1, width: 36, height: 36, marginLeft: 'auto', cursor: "pointer" }} />
-
+                                {userInfo?.username&&(<Link style={{ color: '#000000',marginLeft:'auto' }} to={`/category/${head}/${subhead}/${selectedItem}/postt`}>
+                                <DriveFileRenameOutlineIcon onClick={handleClickOpen} sx={{ display: { xs: 'flex', md: 'none' }, mr: 1, width: 36, height: 36 }} />
+                            </Link>)}
+                            {!userInfo?.username&&(<Link style={{ color: '#000000',marginLeft:'auto' }} >
+                                <DriveFileRenameOutlineIcon onClick={handleClickOpen} sx={{ display: { xs: 'flex', md: 'none' }, mr: 1, width: 36, height: 36 }} />
+                            </Link>)}
                             </Box>
-                            <Link style={{ color: '#000000' }} to={`/category/${head}/${subhead}/${selectedItem}/postt`}>
+                            {userInfo?.username&&(<Link style={{ color: '#000000' }} to={`/category/${head}/${subhead}/${selectedItem}/postt`}>
                                 <DriveFileRenameOutlineIcon onClick={handleClickOpen} sx={{ display: { xs: 'none', md: 'flex' }, mr: 1, width: 36, height: 36 }} />
-                            </Link>
+                            </Link>)}
+                            {!userInfo?.username&&(<Link style={{ color: '#000000' }} >
+                                <DriveFileRenameOutlineIcon onClick={handleClickOpen} sx={{ display: { xs: 'none', md: 'flex' }, mr: 1, width: 36, height: 36 }} />
+                            </Link>)}
                             <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex', justifyContent: 'space-around', alignItems: 'center' } }}>
                                 {pages.map((page) => (
                                     <Button
@@ -127,6 +204,7 @@ function Endgame() {
                                         sx={{ my: 2, color: '#000000', display: 'block', backgroundColor: selectedItem === page ? 'orange' : 'inherit' }}
                                     >
                                         {page}
+                                        {sectionCounts[page] !== undefined ? ` (${sectionCounts[page]})`: ` (0)`}
                                     </Button>
                                 ))}
 
@@ -136,6 +214,27 @@ function Endgame() {
                         </Toolbar>
                     </Container>
                 </AppBar>
+                <Snackbar
+                open={openSnack}
+                autoHideDuration={6000}
+                onClose={handleCloseSnack}
+                message="Please login to create post"
+                action={
+                    <React.Fragment>
+                        <Button color="secondary" size="small" href='/login' onClick={handleCloseSnack}>
+                            Login
+                        </Button>
+                        <IconButton
+                            size="small"
+                            aria-label="close"
+                            color="inherit"
+                            onClick={handleCloseSnack}
+                        >
+                            <CloseIcon fontSize="small" />
+                        </IconButton>
+                    </React.Fragment>
+                }
+            />
 
             </>
             <>
@@ -145,12 +244,11 @@ function Endgame() {
                 {
                     (posts.length === 0) ?
                         (<p>No posts found.</p>) :
-
                         posts.map(post => (
-                            (post.section===selectedItem)&&
+                            (post.section === selectedItem) &&
                             <BlogCard key={post._id} post={post} />
                         ))}
-                
+
             </Container>
 
         </div>

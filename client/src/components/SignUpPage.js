@@ -33,7 +33,7 @@ export default function SignupPage() {
     emailErrorEle.textContent = '';
     passwordErrorEle.textContent = '';
     try {
-      const response = await fetch('http://127.0.0.1:4000/signup', {
+      const response = await fetch('http://127.0.0.1:5000/signup', {
         method: 'POST',
         body: JSON.stringify({ username, email, password }),
         headers: { 'Content-Type': 'application/json' },

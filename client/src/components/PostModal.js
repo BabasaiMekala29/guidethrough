@@ -35,7 +35,7 @@
 //         e.preventDefault();
 //         titleErrorEle.textContent = '';
 //         descriptionErrorEle.textContent = '';
-//         const response = await fetch('http://127.0.0.1:4000/post', {
+//         const response = await fetch('http://127.0.0.1:5000/post', {
 //             method: 'POST',
 //             body: JSON.stringify({ title, description, upvote, downvote, likes, category: head, subcategory: subhead, section }),
 //             headers: { 'Content-Type': 'application/json' },
@@ -173,7 +173,7 @@ function PostModal() {
         e.preventDefault();
         setTitleError('');
         setDescriptionError('');
-        const response = await fetch('http://127.0.0.1:4000/post', {
+        const response = await fetch('http://127.0.0.1:5000/post', {
             method: 'POST',
             body: JSON.stringify({ title, description, upvote, downvote, likes, category: head, subcategory: subhead, section }),
             headers: { 'Content-Type': 'application/json' },

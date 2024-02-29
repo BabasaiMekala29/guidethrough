@@ -16,7 +16,7 @@ app.use(express.json());
 
 const dbURI = 'mongodb://127.0.0.1:27017/Users';
 mongoose.connect(dbURI)
-  .then((result) => app.listen(4000))
+  .then((result) => app.listen(5000))
   .catch((err) => console.log(err));
 
 // app.get('*', checkUser);
