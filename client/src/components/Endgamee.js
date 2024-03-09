@@ -12,15 +12,16 @@ import MenuItem from '@mui/material/MenuItem';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import Header from './Header';
 import BlogCard from './BlogCard';
+import Bcard from './Bcard';
 import { Link, useParams } from 'react-router-dom';
 import PostModal from './PostModal';
 import { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../UserContext';
 import Snackbar from '@mui/material/Snackbar';
 import CloseIcon from '@mui/icons-material/Close';
-
+import { LightTooltip } from './LightToolTip';
 const pages = ['Blog', "Dont's", 'Tips', 'Q&A'];
-
+const sortSections = ['Popular', 'Most Useful', 'Recent', 'None'];
 function Endgame() {
     const { userInfo } = useContext(UserContext);
     console.log(userInfo);
@@ -28,9 +29,11 @@ function Endgame() {
     const [open, setOpen] = React.useState(false);
     const [selectedItem, setSelectedItem] = React.useState('Blog');
     const [anchorElNav, setAnchorElNav] = React.useState(null);
+    const [anchorElNavSortSec, setAnchorElNavSortSec] = React.useState(null);
     const [posts, setPosts] = useState([]);
     const [sectionCounts, setSectionCounts] = useState({}); // Object to store counts for each section
     const [openSnack, setOpenSnack] = React.useState(false);
+    const [selectedSec, setSelectedSec] = useState('None');
     useEffect(() => {
         const fetchPosts = async () => {
             console.log("hiii")
@@ -59,33 +62,16 @@ function Endgame() {
 
     const handleClickOpen = () => {
         setOpen(true);
-    //     if (!userInfo) {
-    //         console.log("ieunjri")
-    //         handleClickSnack();
-        
-        
-    //     return (
-    //         <div>
-    //             {/* <h1>hbje</h1> */}
-    //             <Snackbar
-    //                 open={openSnack}
-    //                 autoHideDuration={6000}
-    //                 onClose={handleCloseSnack}
-    //                 message="Note archived"
-    //                 action={action}
-    //             />
-    //         </div>
-    //     )
-    // }
-    if (!userInfo?.username) {
-        setOpenSnack(true);
-        return;
-    }
+
+        if (!userInfo?.username) {
+            setOpenSnack(true);
+            return;
+        }
         return (
             <PostModal />
         )
     };
-    
+
     const handleCloseSnack = (event, reason) => {
         if (reason === 'clickaway') {
             return;
@@ -93,36 +79,15 @@ function Endgame() {
 
         setOpenSnack(false);
     };
-    // const [openSnack, setOpenSnack] = React.useState(false);
 
-    // const handleClickSnack = () => {
-    //     setOpenSnack(true);
-    // };
+    const handleOpenNavMenuSort = (event) => {
+        setAnchorElNavSortSec(event.currentTarget);
+    };
 
-    // const handleCloseSnack = (event, reason) => {
-    //     if (reason === 'clickaway') {
-    //         return;
-    //     }
 
-    //     setOpenSnack(false);
-    // };
-
-    // const action = (
-    //     <React.Fragment>
-    //         <Button color="secondary" size="small" onClick={handleCloseSnack}>
-    //             UNDO
-    //         </Button>
-    //         <IconButton
-    //             size="small"
-    //             aria-label="close"
-    //             color="inherit"
-    //             onClick={handleCloseSnack}
-    //         >
-    //             <CloseIcon fontSize="small" />
-    //         </IconButton>
-    //     </React.Fragment>
-    // );
-    
+    const handleCloseNavMenuSort = () => {
+        setAnchorElNavSortSec(null);
+    };
 
     const handleOpenNavMenu = (event) => {
         setAnchorElNav(event.currentTarget);
@@ -136,6 +101,29 @@ function Endgame() {
     const handleBgColor = (page) => {
         handleCloseNavMenu();
         setSelectedItem(page);
+    }
+    const handleClick = async (sec) => {
+        handleCloseNavMenuSort();
+        setSelectedSec(sec);
+        try {
+            const response = await fetch(`http://127.0.0.1:5000/category/${head}/${subhead}/sortby/${sec}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch posts');
+            }
+            const orderedData = await response.json();
+            console.log(orderedData);
+            setPosts(orderedData);
+            // Calculate counts for each section
+            // const counts = {};
+            // data.forEach(post => {
+            //     counts[post.section] = (counts[post.section] || 0) + 1;
+            // });
+            // setSectionCounts(counts);
+
+        } catch (error) {
+            console.log(error);
+        }
+
     }
 
     return (
@@ -177,34 +165,50 @@ function Endgame() {
                                     }}
                                 >
                                     {pages.map((page) => (
-                                        <MenuItem key={page} onClick={() => handleBgColor(page)} sx={{ backgroundColor: selectedItem === page ? 'orange' : 'inherit' }}>
-                                            <Typography textAlign="center">{page}{sectionCounts[page] !== undefined ? ` (${sectionCounts[page]})`: ` (0)`}</Typography>
+                                        <MenuItem key={page} onClick={() => handleBgColor(page)} sx={{ backgroundColor: selectedItem === page ? '#d5722e' : 'inherit' }}>
+                                            <Typography textAlign="center">{page}{sectionCounts[page] !== undefined ? ` (${sectionCounts[page]})` : ` (0)`}</Typography>
                                         </MenuItem>
                                     ))}
                                 </Menu>
-                                {userInfo?.username&&(<Link style={{ color: '#000000',marginLeft:'auto' }} to={`/category/${head}/${subhead}/${selectedItem}/postt`}>
-                                <DriveFileRenameOutlineIcon onClick={handleClickOpen} sx={{ display: { xs: 'flex', md: 'none' }, mr: 1, width: 36, height: 36 }} />
-                            </Link>)}
-                            {!userInfo?.username&&(<Link style={{ color: '#000000',marginLeft:'auto' }} >
-                                <DriveFileRenameOutlineIcon onClick={handleClickOpen} sx={{ display: { xs: 'flex', md: 'none' }, mr: 1, width: 36, height: 36 }} />
-                            </Link>)}
+                                {userInfo?.username && (
+                                    <LightTooltip title="New Post">
+                                        <Link style={{ color: '#000000', marginLeft: 'auto' }} to={`/category/${head}/${subhead}/${selectedItem}/postt`}>
+                                            <DriveFileRenameOutlineIcon onClick={handleClickOpen} sx={{ display: { xs: 'flex', md: 'none' }, mr: 1, width: 36, height: 36 }} />
+                                        </Link>
+                                    </LightTooltip>
+                                )}
+                                {!userInfo?.username && (
+                                    <LightTooltip title="New Post">
+                                        <Link style={{ color: '#000000', marginLeft: 'auto' }} >
+                                            <DriveFileRenameOutlineIcon onClick={handleClickOpen} sx={{ display: { xs: 'flex', md: 'none' }, mr: 1, width: 36, height: 36 }} />
+                                        </Link>
+                                    </LightTooltip>
+                                )}
                             </Box>
-                            {userInfo?.username&&(<Link style={{ color: '#000000' }} to={`/category/${head}/${subhead}/${selectedItem}/postt`}>
-                                <DriveFileRenameOutlineIcon onClick={handleClickOpen} sx={{ display: { xs: 'none', md: 'flex' }, mr: 1, width: 36, height: 36 }} />
-                            </Link>)}
-                            {!userInfo?.username&&(<Link style={{ color: '#000000' }} >
-                                <DriveFileRenameOutlineIcon onClick={handleClickOpen} sx={{ display: { xs: 'none', md: 'flex' }, mr: 1, width: 36, height: 36 }} />
-                            </Link>)}
+                            {userInfo?.username && (
+                                <LightTooltip title="New Post">
+                                    <Link style={{ color: '#000000' }} to={`/category/${head}/${subhead}/${selectedItem}/postt`}>
+                                        <DriveFileRenameOutlineIcon onClick={handleClickOpen} sx={{ display: { xs: 'none', md: 'flex' }, mr: 1, width: 36, height: 36 }} />
+                                    </Link>
+                                </LightTooltip>
+                            )}
+                            {!userInfo?.username && (
+                                <LightTooltip title="New Post">
+                                    <Link style={{ color: '#000000' }} >
+                                        <DriveFileRenameOutlineIcon onClick={handleClickOpen} sx={{ display: { xs: 'none', md: 'flex' }, mr: 1, width: 36, height: 36 }} />
+                                    </Link>
+                                </LightTooltip>
+                            )}
                             <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex', justifyContent: 'space-around', alignItems: 'center' } }}>
                                 {pages.map((page) => (
                                     <Button
 
                                         key={page}
                                         onClick={() => setSelectedItem(page)}
-                                        sx={{ my: 2, color: '#000000', display: 'block', backgroundColor: selectedItem === page ? 'orange' : 'inherit' }}
+                                        sx={{ my: 2, color: '#000000', display: 'block', backgroundColor: selectedItem === page ? '#d5722e' : 'inherit' }}
                                     >
                                         {page}
-                                        {sectionCounts[page] !== undefined ? ` (${sectionCounts[page]})`: ` (0)`}
+                                        {sectionCounts[page] !== undefined ? ` (${sectionCounts[page]})` : ` (0)`}
                                     </Button>
                                 ))}
 
@@ -214,39 +218,76 @@ function Endgame() {
                         </Toolbar>
                     </Container>
                 </AppBar>
+
                 <Snackbar
-                open={openSnack}
-                autoHideDuration={6000}
-                onClose={handleCloseSnack}
-                message="Please login to create post"
-                action={
-                    <React.Fragment>
-                        <Button color="secondary" size="small" href='/login' onClick={handleCloseSnack}>
-                            Login
-                        </Button>
-                        <IconButton
-                            size="small"
-                            aria-label="close"
-                            color="inherit"
-                            onClick={handleCloseSnack}
-                        >
-                            <CloseIcon fontSize="small" />
-                        </IconButton>
-                    </React.Fragment>
-                }
-            />
+                    open={openSnack}
+                    autoHideDuration={6000}
+                    onClose={handleCloseSnack}
+                    message="Please login to create post"
+                    action={
+                        <React.Fragment>
+                            <Button color="secondary" size="small" href='/login' onClick={handleCloseSnack}>
+                                Login
+                            </Button>
+                            <IconButton
+                                size="small"
+                                aria-label="close"
+                                color="inherit"
+                                onClick={handleCloseSnack}
+                            >
+                                <CloseIcon fontSize="small" />
+                            </IconButton>
+                        </React.Fragment>
+                    }
+                />
 
             </>
-            <>
-                <Typography paddingLeft={'10px'} paddingTop={'10px'}>{head}{' > '}{subhead}</Typography>
-            </>
+            <Container style={{ flexGrow: 1, display: 'flex', justifyContent: 'space-between', paddingTop: '12px' }}>
+
+                <Typography>{head}{' > '}{subhead}</Typography>
+                <Box>
+                    <IconButton
+                        size="large"
+                        aria-label="account of current user"
+                        aria-controls="menu-appbar"
+                        aria-haspopup="true"
+                        onClick={handleOpenNavMenuSort}
+                        color="inherit"
+                    >
+                        <MenuIcon />
+                    </IconButton>
+                    <Menu
+                        id="menu-appbar"
+                        anchorEl={anchorElNavSortSec}
+                        anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'left',
+                        }}
+                        keepMounted
+                        transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'left',
+                        }}
+                        open={Boolean(anchorElNavSortSec)}
+                        onClose={handleCloseNavMenuSort}
+
+                    >
+                        {sortSections.map((sec) => (
+                            <MenuItem key={sec} onClick={() => handleClick(sec)} sx={{ backgroundColor: selectedSec === sec ? '#d5722e' : 'inherit' }}>
+                                <Typography textAlign="center">{sec}</Typography>
+                            </MenuItem>
+                        ))}
+                    </Menu>
+                </Box>
+
+            </Container>
             <Container sx={{ paddingTop: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 {
                     (posts.length === 0) ?
                         (<p>No posts found.</p>) :
                         posts.map(post => (
                             (post.section === selectedItem) &&
-                            <BlogCard key={post._id} post={post} />
+                            <Bcard key={post._id} post={post} />
                         ))}
 
             </Container>

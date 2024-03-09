@@ -16,6 +16,8 @@ import UserPosts from './components/UserPosts.js';
 import SavedPosts from './components/SavedPosts.js';
 import UserExpandedPost from './components/UserExpandedPost.js';
 import { PostContextProvider } from './PostContext.js';
+import DetailedPost from './components/DetailedPost.js';
+import SearchResultComp from './components/SearchResultComp.js';
 function App() {
   // const {userInfo} = useContext(UserContext);
   // const isLoggedIn = !!userInfo?.username;
@@ -58,15 +60,12 @@ function App() {
               <Route path='/category/:head/:subhead/:section/postt'  element={<ConditionalRouteTwo a={<PostModal />} b={<HomePage />} />}  />
               <Route path='/user/posts' element={<UserPosts />} />
               <Route path='/user/savedposts' element={<SavedPosts />} />
-              {/* <Route path='/userpost/:id' element={<UserExpandedPost />} /> */}
-              {/* <Route path='/end' element={<Endgame />} /> */}
-              {/* <Route path='/category/:head/:subhead/post' element={<PostPage />} /> */}
-              {/* <Route path='/category/:head/:subhead/:page' element={<SectionPage />} /> */}
+              <Route path='/post/:category/:subcategory/:section/:id' element= {<DetailedPost />} />
+              <Route path="/search-results" element={<SearchResultComp />} />
             </Routes>
         </Router>
         </PostContextProvider>
             </UserContextProvider>
-        
       </ThemeProvider>
     </div>
   );

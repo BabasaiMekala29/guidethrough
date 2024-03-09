@@ -159,7 +159,7 @@ function PostModal() {
     const [redirect, setRedirect] = useState(false);
     const [titleError, setTitleError] = useState('');
     const [descriptionError, setDescriptionError] = useState('');
-
+    const labelText = (section==='Q&A') ? 'Add question' : `Add ${section}`;
     const handleClickOpen = () => {
         setOpen(true);
     };
@@ -180,18 +180,19 @@ function PostModal() {
             credentials: 'include'
         })
         const data = await response.json();
+
         if (data.errors) {
-            console.log(data.errors)
             setTitleError(data.errors.title);
             setDescriptionError(data.errors.description);
+            console.log(data.errors)
         }
         else {
             console.log(data);
             setRedirect(true);
             handleClose();
-        }   
+        }
     }
-    
+
     if (redirect) {
         return <Navigate to={`/category/${head}/${subhead}`} />
     }
@@ -202,46 +203,48 @@ function PostModal() {
                 open={open}
                 onClose={handleClose}
                 fullWidth
-                // PaperProps={{
-                //     component: 'form',
-                // }}
+            // PaperProps={{
+            //     component: 'form',
+            // }}
             >
                 <DialogTitle>Create Post</DialogTitle>
                 <DialogContent>
                     <Typography>{head}{'>'}{subhead}{'>'}{section}</Typography>
                 </DialogContent>
-                
-                        <DialogContent>
-                            <TextField
-                               
-                                required
-                                margin="dense"
-                                id="heading"
-                                name="heading"
-                                label="Add heading"
-                                type="text"
-                                fullWidth
-                                variant="standard"
-                                value={title}
-                                onChange={e => setTitle(e.target.value)}
-                            />
-                            <Typography color="error">{titleError}</Typography>
-                        </DialogContent>
-                    
+
+                <DialogContent>
+                    <TextField
+                        required
+                        margin="dense"
+                        id="heading"
+                        name="heading"
+                        label="Add heading"
+                        type="text"
+                        fullWidth
+                        variant="standard"
+                        value={title}
+                        onChange={e => setTitle(e.target.value)}
+
+                    />
+                    <Typography color="error">{titleError}</Typography>
+
+                    {/* {section!=='Blog' &&(<Typography color="error"></Typography>)} */}
+                </DialogContent>
+
                 <DialogContent>
                     <TextField
                         required
                         margin="dense"
                         id={section}
                         name={section}
-                        label={`Add ${section}`}
+                        label={labelText}
                         type="text"
                         fullWidth
                         multiline
                         rows={5}
                         variant="outlined"
                         value={description}
-                        onChange={e => setDescription(e.target.value)}  
+                        onChange={e => setDescription(e.target.value)}
                     />
                     <Typography color="error">{descriptionError}</Typography>
                 </DialogContent>

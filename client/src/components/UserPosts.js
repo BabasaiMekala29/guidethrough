@@ -45,12 +45,18 @@ function UserPosts() {
         <Typography variant='h6' paddingLeft={'12px'} paddingTop={'12px'}>{`${userInfo.username.toUpperCase()}'s Posts`}</Typography>
         <Container sx={{ paddingTop: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             
-            {userPosts.posts?.map(post => (
+            {/* {userPosts.posts?.map(post => (
                 <UserPostElement key={post._id} post={post} />
                 // <>
                 // <li key={post._id}>{post.title}</li>
                 // <li key={post._id}>{post.description}</li> 
                 // </> // Assuming each post has a 'title' field
+            ))} */}
+            {(userPosts?.posts?.length === 0) ?
+                        (<p>No posts found.</p>) :
+                        userPosts.posts?.map(post => (
+                <UserPostElement key={post._id} post={post} />
+                
             ))}
         </Container>
         </>)

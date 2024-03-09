@@ -25,6 +25,8 @@ import { Navigate } from 'react-router-dom';
 import Modal from '@mui/material/Modal';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { LightTooltip } from './LightToolTip';
+
 const ExpandMore = styled((props) => {
     const { expand, ...other } = props;
     return <IconButton {...other} />;
@@ -200,12 +202,16 @@ export default function UserPostElement({ post }) {
                             </Typography>
                         </CardContent>
                         <CardActions disableSpacing>
+                        <LightTooltip title="Edit">
                             <IconButton onClick={handleClickOpenEditDilog}>
                                 <EditIcon />
                             </IconButton>
+                        </LightTooltip>
+                        <LightTooltip title="Delete">
                             <IconButton onClick={handleClickOpen}>
                                 <DeleteIcon />
                             </IconButton>
+                            </LightTooltip>
                         </CardActions>
 
                     </Card>

@@ -24,7 +24,6 @@ const requireAuth = (req,res,next)=>{
 
 const checkUser = (req,res,next) =>{
     const token = req.cookies.jwt;
-    
     if(token){
         jwt.verify(token,'icandothisallday', async (err,decodedToken)=>{
             if(err) {
@@ -36,13 +35,11 @@ const checkUser = (req,res,next) =>{
                 // console.log(decodedToken);
                 let user = await User.findById(decodedToken.id);
                 
-                next();
-                
+                next();    
             }
         })
     }
     else{
-        
         next();
     }
     

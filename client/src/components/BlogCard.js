@@ -1,39 +1,32 @@
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
-import { format, formatISO9075 } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
-import CardMedia from '@mui/material/CardMedia';
 import CardContent from '@mui/material/CardContent';
 import CardActions from '@mui/material/CardActions';
-import Collapse from '@mui/material/Collapse';
 import Avatar from '@mui/material/Avatar';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import { red } from '@mui/material/colors';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import ShareIcon from '@mui/icons-material/Share';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import Header from './Header';
-import ExpandLess from '@mui/icons-material/ExpandLess';
-import ExpandedPost from './ExpandedPost';
-import { Link, Navigate } from 'react-router-dom';
-import { useState, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../UserContext';
-import { PostContext } from '../PostContext';
-import FavoriteBorderOutlinedIcon from '@mui/icons-material/FavoriteBorderOutlined';
 import Upvote from '../images/upvote.png';
 import Downvote from '../images/downvote.png';
 import BookmarksIcon from '@mui/icons-material/Bookmarks';
-import BookmarksOutlinedIcon from '@mui/icons-material/BookmarksOutlined';
 import Modal from '@mui/material/Modal';
-import { Snackbar } from '@mui/material';
+import { ButtonGroup, Snackbar, TextField } from '@mui/material';
 import { Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-// import CloseIcon from '@mui/icons-material/Close';
-// import IconButton from '@mui/material/IconButton';
+import { LightTooltip } from './LightToolTip';
+import CommentIcon from '@mui/icons-material/Comment';
+import { Container } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Cancel';
+import CommentComp from './CommentComp';
+import { Link } from 'react-router-dom';
+
 const ExpandMore = styled((props) => {
   const { expand, ...other } = props;
   return <IconButton {...other} />;
@@ -62,17 +55,42 @@ export default function BlogCard({ key, post }) {
   const [openSnack, setOpenSnack] = React.useState(false);
   const [updatedPostData, setUpdatedPostData] = useState(post);
   const [openSaveSnack, setOpenSaveSnack] = React.useState(false);
+  const [comment, setComment] = useState('');
+  const [commentsData, setCommentsData] = useState([]);
   // const [saved,setSaved] = useState(post.saved);
-  // console.log(saved)
+  const commentLabel = (post.section === 'Q&A') ? 'Responses:' : 'Comments:';
+  const commentMesg = (post.section === 'Q&A') ? 'No responses found' : 'No comments found';
+  const butnText = (post.section === 'Q&A') ? 'Send' : 'Comment';
+  useEffect(() => {
+    // Fetch commentsData from server when component mounts
+    const fetchCommentsData = async () => {
+      try {
+        const response = await fetch(`http://127.0.0.1:5000/post/${post._id}/comment`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch comments data');
+        }
+        const data = await response.json();
+        setCommentsData(data);
+      } catch (error) {
+        console.error('Error fetching comments data:', error);
+      }
+    };
+
+    fetchCommentsData();
+  }, []);
+
+  console.log(commentsData)
+
+  const userName = (!userInfo || !userInfo?.username) ? "X" : userInfo?.username[0].toUpperCase()
   const handleCloseSaveSnack = (event, reason) => {
     if (reason === 'clickaway') {
       return;
     }
 
-    setOpenSnack(false);
+    setOpenSaveSnack(false);
   };
   const handleUpvote = async () => {
-    if (!userInfo || !userInfo.username) {
+    if (!userInfo || !userInfo?.username) {
 
       setOpenSnack(true);
       return;
@@ -90,16 +108,16 @@ export default function BlogCard({ key, post }) {
       console.log(data);
       if (response.ok) {
         setUpdatedPostData(data);
-        
-          if (canUpvote) {
-            setUpvoteCount(upvoteCount+1);
-            setCanUpvote(false);
-          }
-          else {
-            setUpvoteCount(upvoteCount-1);
-            setCanUpvote(true);
-          }
-        
+
+        if (canUpvote) {
+          setUpvoteCount(upvoteCount + 1);
+          setCanUpvote(false);
+        }
+        else {
+          setUpvoteCount(upvoteCount - 1);
+          setCanUpvote(true);
+        }
+
 
 
         // console.log(response)
@@ -111,7 +129,7 @@ export default function BlogCard({ key, post }) {
     }
   };
   const handleDownvote = async () => {
-    if (!userInfo || !userInfo.username) {
+    if (!userInfo || !userInfo?.username) {
       setOpenSnack(true);
       return;
     }
@@ -146,7 +164,7 @@ export default function BlogCard({ key, post }) {
     }
   };
   const handleLike = async () => {
-    if (!userInfo || !userInfo.username) {
+    if (!userInfo || !userInfo?.username) {
       setOpenSnack(true);
       return;
     }
@@ -183,33 +201,33 @@ export default function BlogCard({ key, post }) {
 
   const handleSave = async () => {
     console.log(userInfo)
-    if (!userInfo || !userInfo.username) {
+    if (!userInfo || !userInfo?.username) {
       setOpenSnack(true);
       return;
     }
-      console.log(post._id)
-      try {
-        const response = await fetch(`http://127.0.0.1:5000/post/${post._id}/save`, {
-          method: 'PUT',
-          body: JSON.stringify({user: userInfo?._id || userInfo?.id }) ,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        const data = await response.json();
-        if(response.ok){
-          setOpenSaveSnack(true);
-          // return;
-        }
-        console.log(data);
-        
-
-      } catch (error) {
-        console.error('Error upvoting post:', error);
+    console.log(post._id)
+    try {
+      const response = await fetch(`http://127.0.0.1:5000/post/${post._id}/save`, {
+        method: 'PUT',
+        body: JSON.stringify({ user: userInfo?._id || userInfo?.id }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setOpenSaveSnack(true);
+        // return;
       }
-    
+      console.log(data);
+
+
+    } catch (error) {
+      console.error('Error upvoting post:', error);
+    }
+
   };
- 
+
   const handleCloseSnack = (event, reason) => {
     if (reason === 'clickaway') {
       return;
@@ -219,6 +237,11 @@ export default function BlogCard({ key, post }) {
   };
   const handleOpenModal = () => {
     setOpenModal(true);
+    // setExpanded(true); 
+    // const postId = post._id; // Get the post ID
+    // const postLink = `http://localhost:3000//${post.category}/${post.subcategory}/${post.section}/${postId}`; // Generate the link using post ID
+    // const readMoreLink = document.getElementById('readMoreLink');
+    // readMoreLink.setAttribute('href', postLink);
   };
 
   const handleCloseModal = () => {
@@ -230,9 +253,59 @@ export default function BlogCard({ key, post }) {
     // return (<ExpandedPost />)
     // console.log(expanded);
   };
+  const commentField = document.getElementById('commentText');
+  const addComment = async (comment) => {
+
+    if (!userInfo || !userInfo?.username) {
+      setOpenSnack(true);
+      return;
+    }
+    // console.log(comment)
+    try {
+      const response = await fetch(`http://127.0.0.1:5000/post/${post._id}/comment`, {
+        method: 'PUT',
+        body: JSON.stringify({ user: userInfo?.username, comment }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setCommentsData(data);
+        // return;
+      }
+      console.log(data);
+
+
+    } catch (error) {
+      console.error('Error upvoting post:', error);
+    }
+
+  }
+
+  const handleShare = () => {
+    const postLink = `http://localhost:3000/category/Travel/Solo Travel/${post.id}`; // Replace with your actual post link
+
+    // Create a temporary input element
+    const tempInput = document.createElement('input');
+    tempInput.value = postLink;
+    document.body.appendChild(tempInput);
+
+    // Select and copy the text
+    tempInput.select();
+    document.execCommand('copy');
+
+    // Remove the temporary input element
+    document.body.removeChild(tempInput);
+
+    console.log('Post link copied to clipboard');
+    // You can show a success message or perform any other action here
+  };
+
+
 
   return (
-    <Card sx={{ marginBottom: '8px', width: "80%" }}>
+    <Card sx={{ marginBottom: '16px', width: "80%" }}>
       <CardHeader
         avatar={
           <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
@@ -246,6 +319,7 @@ export default function BlogCard({ key, post }) {
         // }
         title={post.author.username}
         subheader={format(new Date(post.createdAt), "dd-MMM-yyyy")}
+
       />
 
       <CardContent>
@@ -263,14 +337,18 @@ export default function BlogCard({ key, post }) {
         {/* <IconButton> */}
 
         {/* <Link to={`/post/${post._id}`}> */}
-        <ExpandMore
-          expand={expanded}
+         <ExpandMore
+          /*expand={expanded}
           onClick={handleExpandClick}
           aria-expanded={expanded}
-          aria-label="show more"
+          aria-label="show more" */
 
-        >
+        > 
+          {/* <Link to={`/post/${post._id}`} onClick={handleOpenModal}>Read more</Link> */}
           <Typography onClick={handleOpenModal}>Read more</Typography>
+          {/* <Link id="readMoreLink" to={`/${post.category}/${post.subcategory}/${post.section}/${post._id}`} onClick={handleOpenModal}>Read more</Link> */}
+          {/* <Link to={`/${post.category}/${post.subcategory}/${post.section}/${post._id}`} onClick={handleOpenModal}>Read more</Link> */}
+
         </ExpandMore>
         {/* </Link> */}
       </CardActions>
@@ -343,7 +421,7 @@ export default function BlogCard({ key, post }) {
           <IconButton onClick={handleCloseModal} sx={{ alignSelf: 'flex-end' }} aria-label="recipe">
             <CancelIcon />
           </IconButton>
-          <Card sx={{ margin: 'auto', marginTop: '0', width: '75%' }}>
+          <Card sx={{ margin: 'auto', marginTop: '0', width: '75%', overflow: 'scroll' }}>
             <CardHeader
               avatar={
                 <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
@@ -360,55 +438,68 @@ export default function BlogCard({ key, post }) {
               subheader={format(new Date(post.createdAt), "dd-MMM-yyyy")}
             />
             <CardContent>
-              <Typography variant='h6'>{post.title}</Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant='h5'>{post.title.toUpperCase()}</Typography>
+              <Typography variant="h6" color="text.secondary">
                 {post.description}
               </Typography>
             </CardContent>
             <CardActions disableSpacing>
-              <IconButton aria-label="add to favorites" sx={{ display: 'flex' }} onClick={handleUpvote}>
-                <img src={Upvote} height={'36px'} width={'36px'} />
-                <Typography>{upvoteCount}</Typography>
-              </IconButton>
-              <IconButton aria-label="share" sx={{ display: 'flex' }} onClick={handleDownvote}>
-                <img src={Downvote} height={'36px'} width={'36px'} />
-                <Typography>{downvoteCount}</Typography>
-              </IconButton>
-              <IconButton aria-label="add to favorites" onClick={handleLike}>
-                {/* {
-                            likeStatus? (
-                                <IconButton onClick={()=>setLikeStatus(false)}>
-                                    <FavoriteIcon />
-                                </IconButton>
-                                ):(
-                                    <IconButton onClick={()=>setLikeStatus(true)}>
-                                    <FavoriteBorderOutlinedIcon />
-                                </IconButton>
-                                )
-                        } */}
-                <FavoriteIcon />
-                <Typography>{likesCount}</Typography>
-              </IconButton>
-              <IconButton aria-label="share">
-                <ShareIcon />
-              </IconButton>
-              <IconButton onClick={handleSave} >
-                {/* {
-                  saveStatus ? (
-                    <IconButton onClick={() => setSaveStatus(false)}>
-                      <BookmarksIcon />
-                    </IconButton>
-                  ) : (
-                    <IconButton onClick={() => setSaveStatus(true)}>
-                      <BookmarksOutlinedIcon />
-                    </IconButton>
-                  )
-                  } */}
-                <BookmarksIcon />
 
-              </IconButton>
+              {post.section !== 'Q&A' && (<><LightTooltip title="Upvote">
+                <IconButton aria-label="add to favorites" sx={{ display: 'flex' }} onClick={handleUpvote}>
+                  <img src={Upvote} height={'36px'} width={'36px'} />
+                  <Typography>{upvoteCount}</Typography>
+                </IconButton>
+              </LightTooltip>
+                <LightTooltip title="Downvote">
+                  <IconButton aria-label="share" sx={{ display: 'flex' }} onClick={handleDownvote}>
+                    <img src={Downvote} height={'36px'} width={'36px'} />
+                    <Typography>{downvoteCount}</Typography>
+                  </IconButton>
+                </LightTooltip>
+                <LightTooltip title="Like">
+                  <IconButton aria-label="add to favorites" onClick={handleLike}>
+
+                    <FavoriteIcon />
+                    <Typography>{likesCount}</Typography>
+                  </IconButton>
+                </LightTooltip>
+                <LightTooltip title="Save">
+                  <IconButton onClick={handleSave} >
+                    <BookmarksIcon />
+                  </IconButton>
+                </LightTooltip></>)}
+
+              <LightTooltip title="Share">
+                <IconButton aria-label="share" onClick={handleShare}>
+                  <ShareIcon />
+                </IconButton>
+              </LightTooltip>
             </CardActions>
+            <Typography variant='h6' padding={'10px'}>{commentLabel} </Typography>
+            <Container sx={{ display: 'flex', flexDirection: 'column', marginBottom: '12px' }}>
+              <div style={{ display: 'flex', flexGrow: 1, marginBottom: '12px' }}>
+                <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
+                  {userName}
+                </Avatar>
+                <TextField id="commentText" label={`Add a ${commentLabel.substring(0, commentLabel.length - 2)}...`} variant="standard" sx={{ marginLeft: '10px', width: '100%' }} value={comment} onChange={e => setComment(e.target.value)} />
+              </div>
 
+              {comment.length > 0 && (
+                <ButtonGroup variant='text' sx={{ alignSelf: 'flex-end' }}>
+                  <Button onClick={() => { commentField.value = ''; setComment('') }}>Cancel</Button>
+                  <Button onClick={() => { commentField.value = ''; setComment(''); addComment(comment) }} >{butnText}</Button>
+                </ButtonGroup>
+              )}
+              <div>
+                {
+                  (commentsData.length === 0) ?
+                    (<p style={{ textAlign: 'center' }}>{commentMesg}</p>) :
+                    commentsData.map(cmt => (
+                      <CommentComp key={cmt._id} cmt={cmt} post={post} />
+                    ))}
+              </div>
+            </Container>
           </Card>
         </div>
       </Modal>

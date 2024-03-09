@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Button, ButtonGroup, AppBar, Box, Toolbar, IconButton, Typography, InputBase, Badge, MenuItem, Menu, Avatar } from '@mui/material';
+import { Button, ButtonGroup, AppBar, Box, Toolbar, IconButton, Typography, InputBase, Badge, MenuItem, Menu, Avatar, Card, Container } from '@mui/material';
 import { styled, alpha } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import AccountCircle from '@mui/icons-material/AccountCircle';
@@ -15,6 +15,14 @@ import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import { useState, useEffect, useContext } from 'react';
 import Snackbar from '@mui/material/Snackbar';
 import CloseIcon from '@mui/icons-material/Close';
+import { LightTooltip } from './LightToolTip';
+import { Popover } from '@mui/material';
+import { red } from '@mui/material/colors';
+import Divider from '@mui/material/Divider';
+import { formatDistanceToNow } from 'date-fns'
+import SearchResultComp from './SearchResultComp';
+import AutoAwesomeMotionIcon from '@mui/icons-material/AutoAwesomeMotion';
+
 // import LogoutIcon from '@mui/icons-material/Logout';
 const Search = styled('div')(({ theme }) => ({
     position: 'relative',
@@ -42,6 +50,8 @@ const SearchIconWrapper = styled('div')(({ theme }) => ({
     justifyContent: 'center',
 }));
 
+
+
 const StyledInputBase = styled(InputBase)(({ theme }) => ({
     color: 'inherit',
     '& .MuiInputBase-input': {
@@ -61,6 +71,10 @@ function Header() {
     const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
     const { userInfo, setUserInfo, isLoading } = useContext(UserContext);
     const [isLoggedOut, setIsLoggedOut] = useState(false);
+    const [notificationsAnchorEl, setNotificationsAnchorEl] = useState(null);
+    const [notifications, setNotifications] = useState([]);
+    const [searchValue, setSearchValue] = useState('');
+    const userid = userInfo?.id || userInfo?._id;
     if (isLoading) {
         return <div>Loading...</div>; // Render loading indicator if data is still being fetched
     }
@@ -70,27 +84,7 @@ function Header() {
         }
         setIsLoggedOut(false);
     };
-    // useEffect(() => {
-    //     // const userData = localStorage.getItem('user');
-    //     // const user = userData ? JSON.parse(userData) : null;
-    //     // console.log("jnwkj",user.token)
-    //     fetch('http://127.0.0.1:5000/profile', {
-    //       credentials: 'include',
-    //     //   headers: {
-    //     //     'Authorization': `Bearer ${user.token}` // Place the Authorization header here
-    //     //   }
 
-    //     })
-    //       .then(res => {
-    //         res.json().then(userInfo => {
-    //           console.log("User info:", userInfo);
-    //           setUserInfo(userInfo);
-    //         });
-    //       })
-    //       .catch(error => {
-    //         console.error("Fetch error:", error);
-    //       });
-    //   }, []);
 
     function logout() {
         fetch('http://127.0.0.1:5000/logout', {
@@ -99,7 +93,7 @@ function Header() {
         })
             .then(() => {
                 // <Navigate to='/category' />
-                setIsLoggedOut(true); 
+                setIsLoggedOut(true);
                 setUserInfo(null);
             })
         // localStorage.removeItem('user');
@@ -107,6 +101,28 @@ function Header() {
 
     }
 
+    const handleNotificationsClick = async (event) => {
+        handleMenuClose();
+        setNotificationsAnchorEl(event.currentTarget);
+        try {
+            const response = await fetch(`http://127.0.0.1:5000/user/${userid}/notifications`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch post notifications');
+            }
+
+            const data = await response.json();
+            console.log("nots ", data);
+            setNotifications(data);
+        }
+        catch (error) {
+            console.error('Error fetching post notifications:', error);
+        }
+
+    };
+
+    const handleNotificationsClose = () => {
+        setNotificationsAnchorEl(null);
+    };
 
     const isMenuOpen = Boolean(anchorEl);
     const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
@@ -129,15 +145,22 @@ function Header() {
         setMobileMoreAnchorEl(event.currentTarget);
     };
 
-    const showPosts = (e) =>{
+    const showPosts = (e) => {
         handleMenuClose();
     }
 
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            console.log('Search value:', searchValue);
+            window.location.href = `/search-results?query=${searchValue}`;
+            // Here you can do whatever you want with the search value, like sending it to a function or API call
+        }
+    };
 
     const username = userInfo?.username;
-    const userid = userInfo?.id;
+
     console.log(userid)
-    
+
     const searchStyle = {
         width: 600
     }
@@ -160,7 +183,7 @@ function Header() {
         >
             <MenuItem onClick={handleMenuClose}>
                 <IconButton
-                    size="large"
+                    size="medium"
                     edge="end"
                     aria-label="account of current user"
                     aria-controls={menuId}
@@ -170,15 +193,15 @@ function Header() {
                     href='/user/savedposts'
                 >
                     <BookmarksIcon />
-                    Saved
+                    <Typography sx={{ marginLeft: '5px', fontSize: '20px' }}>Saved Posts</Typography>
                 </IconButton>
-                
+
             </MenuItem>
-            
-            <MenuItem onClick={()=>showPosts()}>
-            <Link to={'/user/posts'} style={{ textDecoration: "none", color: "inherit", fontSize:'20px', fontWeight:'500' }}>
+
+            <MenuItem onClick={() => showPosts()}>
+                <Link to={'/user/posts'} style={{ textDecoration: "none", color: "inherit", fontSize: '20px', fontWeight: '500' }}>
                     <IconButton
-                        size="large"
+                        size="medium"
                         edge="end"
                         aria-label="account of current user"
                         aria-controls={menuId}
@@ -186,25 +209,24 @@ function Header() {
                         onClick={handleProfileMenuOpen}
                         color="inherit"
                     >
-                        <BookmarksIcon />
-                        <p>My Posts</p>
+                        <AutoAwesomeMotionIcon />
+                        <Typography sx={{ marginLeft: '5px', fontSize: '20px' }}>My Posts</Typography>
                     </IconButton>
-                    </Link>
-                
+                </Link>
+
             </MenuItem>
-            
-            <MenuItem onClick={handleMenuClose}>
+
+            {/* <MenuItem onClick={handleNotificationsClick}>
                 <IconButton
-                    size="large"
+                    size="medium"
                     aria-label="show 17 new notifications"
                     color="inherit"
                 >
-                    <Badge badgeContent={17} color="error">
-                        <NotificationsIcon />
-                    </Badge>
+                    <NotificationsIcon />
+                    <Typography sx={{ marginLeft: '5px', fontSize: '20px' }}>Notifications</Typography>
                 </IconButton>
-                Notifications
-            </MenuItem>
+
+            </MenuItem> */}
         </Menu>
     );
 
@@ -229,7 +251,7 @@ function Header() {
 
 
             {
-                
+
                 !username && (<> <Link to={'/login'} style={{ textDecoration: "none", color: "inherit" }}>
                     <MenuItem >
                         <IconButton
@@ -258,32 +280,9 @@ function Header() {
                     </Link> </>)}
             {username && (<>
                 {/* <Typography sx={{color:"#fefefe"}}>{`Hello, ${username}`}</Typography> */}
-                <MenuItem onClick={logout}>
-                    <IconButton
-                        size="large"
-                        color="inherit"
-                    >
-                        <Badge color="error">
-                            <LogoutIcon />
-                        </Badge>
-                    </IconButton>
-                    <p>Logout</p>
-                </MenuItem>
-
-                <MenuItem>
-                    <IconButton
-                        size="large"
-                        color="inherit"
-                    >
-                        <Badge badgeContent={17} color="error">
-                            <NotificationsIcon />
-                        </Badge>
-                    </IconButton>
-                    <p>Notifications</p>
-                </MenuItem>
                 <MenuItem onClick={handleProfileMenuOpen}>
                     <IconButton
-                        size="large"
+                        size="medium"
                         aria-label="account of current user"
                         aria-controls="primary-search-account-menu"
                         aria-haspopup="true"
@@ -291,130 +290,210 @@ function Header() {
                         href='/user/savedposts'
                     >
                         <BookmarksIcon />
-                        Saved
+                        <Typography sx={{ marginLeft: '5px', fontSize: '20px' }}>Saved Posts</Typography>
                     </IconButton>
-                
-                </MenuItem> 
-                <MenuItem onClick={()=>showPosts()}>
-                    <Link to={'/user/posts'} style={{ textDecoration: "none", color: "inherit", fontSize:'20px', fontWeight:'500' }} >
+
+                </MenuItem>
+                <MenuItem onClick={() => showPosts()}>
+                    <Link to={'/user/posts'} style={{ textDecoration: "none", color: "inherit", fontSize: '20px', fontWeight: '500' }} >
                         <IconButton
-                            size="large"
+                            size="medium"
                             aria-label="account of current user"
                             aria-controls="primary-search-account-menu"
                             aria-haspopup="true"
                             color="inherit"
                         >
-                            <BookmarksIcon />
-                            <p>My Posts</p>
+                            <AutoAwesomeMotionIcon />
+                            <Typography sx={{ marginLeft: '5px', fontSize: '20px' }}>My Posts</Typography>
                         </IconButton>
-                        
+
                     </Link>
-                </MenuItem> 
-                </>)}
+                </MenuItem>
+                <MenuItem onClick={handleNotificationsClick}>
+                    <IconButton
+                        size="medium"
+                        color="inherit"
+                    >
+                        <NotificationsIcon />
+                    </IconButton>
+                    <Typography sx={{ marginLeft: '5px', fontSize: '20px' }}>Notifications</Typography>
+                </MenuItem>
+                <MenuItem onClick={logout}>
+                    <IconButton
+                        size="medium"
+                        color="inherit"
+                    >
+                        <LogoutIcon />
+                    </IconButton>
+                    <Typography sx={{ marginLeft: '5px', fontSize: '20px' }}>Logout</Typography>
+                </MenuItem>
+            </>)}
         </Menu>
     );
 
     return (
         <>
-        <Box>
-            <AppBar sx={{ position: "sticky", top: '0px' }} elevation={0}>
-                <Toolbar sx={{ display: "flex", justifyContent: "space-between" }} >
-                    <Box sx={{ display: 'flex' }}>
-                        <Link to={'/'}>
-                            <Avatar src={logoImg} />
-                        </Link>
+            <Box>
+                <AppBar sx={{ position: "sticky", top: '0px' }} elevation={0}>
+                    <Toolbar sx={{ display: "flex", justifyContent: "space-between" }} >
+                        <Box sx={{ display: 'flex' }}>
+                            <Link to={'/'}>
+                                <Avatar src={logoImg} />
+                            </Link>
 
-                        <Search sx={{ display: { xs: 'none', md: 'block' } }} >
-                            <SearchIconWrapper >
-                                <SearchIcon />
-                            </SearchIconWrapper>
-                            <StyledInputBase
-                                sx={{ width: 600 }}
-                                placeholder="Search…"
-                                inputProps={{ 'aria-label': 'search' }}
-                            />
-                        </Search>
-                        <Search sx={{ display: { xs: 'block', md: 'none' } }}>
-                            <SearchIconWrapper >
-                                <SearchIcon />
-                            </SearchIconWrapper>
-                            <StyledInputBase
-                                placeholder="Search…"
-                                inputProps={{ 'aria-label': 'search' }}
-                            />
-                        </Search>
-                    </Box>
-                    <Box sx={{ display: { xs: 'none', md: 'flex', alignItems: 'center' } }}>
-                        {
-                            !username && (
-                                <>
-                                    <Button href='/login' variant="text" size="small" sx={{ color: '#fefefe', marginRight: '4px' }}>login</Button>
-                                    <Button href='/signup' variant="text" size="small" sx={{ color: "#fefefe" }}>sign up</Button>
-                                </>
-                            )
-                        }
-                        {
-                            username && (
-                                <>
-                                    <Typography sx={{ color: "#fefefe" }}>{`Hello, ${username}`}</Typography>
-                                    <IconButton
-                                        size="large"
-                                        edge="end"
-                                        aria-label="account of current user"
-                                        aria-controls={menuId}
-                                        aria-haspopup="true"
-                                        onClick={handleProfileMenuOpen}
-                                        color="inherit"
-                                    >
-                                        <AccountCircle />
-                                    </IconButton>
-                                    <Button onClick={logout} variant="text" size="small" sx={{ color: "#fefefe" }}>
-                                        <LogoutIcon />
-                                    </Button>
+                            <Search sx={{ display: { xs: 'none', md: 'block' } }} >
+                                <SearchIconWrapper >
+                                    <SearchIcon />
+                                </SearchIconWrapper>
+                                <StyledInputBase
+                                    sx={{ width: 600 }}
+                                    placeholder="Search…"
+                                    inputProps={{ 'aria-label': 'search' }}
+                                    value={searchValue}
+                                    onChange={e => setSearchValue(e.target.value)}
+                                    onKeyDown={handleKeyPress}
+                                />
+                            </Search>
+                            <Search sx={{ display: { xs: 'block', md: 'none' } }}>
+                                <SearchIconWrapper >
+                                    <SearchIcon />
+                                </SearchIconWrapper>
+                                <StyledInputBase
+                                    placeholder="Search…"
+                                    inputProps={{ 'aria-label': 'search' }}
+                                    value={searchValue}
+                                    onChange={e => setSearchValue(e.target.value)}
+                                    onKeyDown={handleKeyPress}
+                                />
+                            </Search>
+                        </Box>
+                        <Box sx={{ display: { xs: 'none', md: 'flex', alignItems: 'center' } }}>
+                            {
+                                !username && (
+                                    <>
+                                        <Button href='/login' variant="text" size="small" sx={{ color: '#fefefe', marginRight: '4px' }}>login</Button>
+                                        <Button href='/signup' variant="text" size="small" sx={{ color: "#fefefe" }}>sign up</Button>
+                                    </>
+                                )
+                            }
+                            {
+                                username && (
+                                    <>
+                                        <Typography sx={{ color: "#fefefe", marginRight: '8px' }}>{`Hello, ${username}`}</Typography>
+                                        <IconButton
+                                            size="large"
+                                            edge="end"
+                                            aria-label="account of current user"
+                                            aria-controls={menuId}
+                                            aria-haspopup="true"
+                                            onClick={handleProfileMenuOpen}
+                                            color="inherit"
+                                        >
+                                            <AccountCircle />
+                                        </IconButton>
+                                        <LightTooltip title="Notifications">
+                                            <IconButton
+                                                size="large"
+                                                edge='end'
+                                                color="inherit"
+                                                onClick={handleNotificationsClick}
+                                            >
+                                                <NotificationsIcon />
+                                            </IconButton>
+                                        </LightTooltip>
+                                        <LightTooltip title="Logout">
+                                            <IconButton onClick={logout} size="large"
+                                                edge='end'
+                                                color="inherit">
+                                                <LogoutIcon />
+                                            </IconButton>
+                                        </LightTooltip>
 
-                                </>
-                            )
-                        }
-                    </Box>
-                    <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center' }}>
-                        {username && <Typography sx={{ color: "#fefefe" }}>{`HELLO, ${username.toUpperCase()} !`}</Typography>}
-                        <IconButton
-                            size="large"
-                            aria-label="show more"
-                            aria-controls={mobileMenuId}
-                            aria-haspopup="true"
-                            onClick={handleMobileMenuOpen}
-                            color="inherit"
-                        >
-                            <MoreIcon />
+                                    </>
+                                )
+                            }
+                        </Box>
+                        <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center' }}>
+                            {username && <Typography sx={{ color: "#fefefe" }}>{`HELLO, ${username.toUpperCase()} !`}</Typography>}
+                            <IconButton
+                                size="large"
+                                aria-label="show more"
+                                aria-controls={mobileMenuId}
+                                aria-haspopup="true"
+                                onClick={handleMobileMenuOpen}
+                                color="inherit"
+                            >
+                                <MoreIcon />
+                            </IconButton>
+                        </Box>
+                    </Toolbar>
+                </AppBar>
+                {renderMobileMenu}
+                {renderMenu}
+            </Box>
+            {/* Notifications Popover */}
+            <Popover
+                open={Boolean(notificationsAnchorEl)}
+                anchorEl={notificationsAnchorEl}
+                onClose={handleNotificationsClose}
+                anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}
+            >
+                <Box marginTop={'0px'}>
+                    {/* Your notifications content goes here */}
+                    {/* You can render your notifications list or any other content */}
+                    {(notifications.length === 0) ?
+                        (<div style={{ display: 'flex', padding: '8px', gap: '10px', alignItems: 'center' }}>
+                            <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
+                                {'!'}
+                            </Avatar>
+                            <p>No notifications found.</p>
+                        </div>) :
+                        notifications.map(notification => (
+
+                            <React.Fragment key={notification._id}>
+                                <IconButton sx={{ display: 'flex', padding: '10px', marginBottom: '10px', gap: '10px', alignItems: 'center' }}
+                                    href={`/post/${notification.category}/${notification.subcategory}/${notification.section}/${notification.postDetails}`}
+                                    target='_blank'>
+                                    <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
+                                        {notification.by[0].toUpperCase()}
+                                    </Avatar>
+                                    <Typography color={'text.primary'}>{`${notification.by} responded to your post as '${notification.commentText.substr(0, 3)}'...`}</Typography>
+                                    <Typography sx={{ fontSize: '12px', color: 'grey', alignSelf: 'flex-end' }}>{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</Typography>
+                                </IconButton>
+                                <Divider />
+                            </React.Fragment>
+
+                        ))}
+                </Box>
+            </Popover>
+            <Snackbar
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'left',
+                }}
+                open={isLoggedOut}
+                autoHideDuration={6000}
+                onClose={handleSnackbarClose}
+                message="You are logged out"
+                action={
+                    <>
+                        <IconButton href='/login' size="small" aria-label="close" color="inherit" onClick={handleSnackbarClose}>
+                            <LoginIcon sx={{ marginLeft: '6px', color: '#ffffff' }} />
                         </IconButton>
-                    </Box>
-                </Toolbar>
-            </AppBar>
-            {renderMobileMenu}
-            {renderMenu}
-        </Box>
-        <Snackbar
-        anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'left',
-        }}
-        open={isLoggedOut}
-        autoHideDuration={6000}
-        onClose={handleSnackbarClose}
-        message="You are logged out"
-        action={
-            <>
-            <IconButton href='/login' size="small" aria-label="close" color="inherit" onClick={handleSnackbarClose}>
-                <LoginIcon sx={{marginLeft:'6px',color:'#ffffff'}} />
-            </IconButton>
-            <IconButton size="small" aria-label="close" color="inherit" onClick={handleSnackbarClose}>
-                <CloseIcon fontSize="small" />
-            </IconButton>
-            </>
-        }
-    />
-    </>
+                        <IconButton size="small" aria-label="close" color="inherit" onClick={handleSnackbarClose}>
+                            <CloseIcon fontSize="small" />
+                        </IconButton>
+                    </>
+                }
+            />
+        </>
     );
 }
 

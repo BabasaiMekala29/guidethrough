@@ -1,20 +1,6 @@
 const {Router} = require('express');
-const Post = require('../models/Post')
 const routeController = require('../controllers/routeControllers')
 const router = Router();
-
-// function verifyToken(req, res, next) {
-//     const bearerHeader = req.headers['Authorization'];
-//     console.log(bearerHeader)
-//     if (typeof bearerHeader !== 'undefined') {
-//       const bearerToken = bearerHeader.split(' ')[1]; // Extract token from "Bearer <token>"
-//       req.token = bearerToken; // Set token in request object for further processing
-//       next(); // Move to next middleware or route handler
-//     } else {
-//       // If no token provided
-//       res.sendStatus(403); // Forbidden
-//     }
-//   }
 
 router.post('/signup', routeController.signup_post);
 router.post('/login', routeController.login_post);
@@ -25,10 +11,27 @@ router.get('/category/:head/:subhead', routeController.get_posts);
 router.get('/user/:id',routeController.get_userposts);
 router.get('/post/:id',routeController.delete_post);
 router.put('/edit/post/:id',routeController.edit_post);
+
 router.put('/post/:postid/upvote',routeController.put_upvote);
 router.put('/post/:postid/downvote',routeController.put_downvote);
 router.put('/post/:postid/like',routeController.put_like);
+
 router.put('/post/:postid/save',routeController.save_post);
 router.get('/savedposts/:id',routeController.get_savedposts);
 router.put('/unsavepost/:postid',routeController.unsavepost);
+router.get('/category/:head/:subhead/sortby/:sec',routeController.get_sortedposts);
+router.put('/post/:postid/comment',routeController.put_comments);
+router.get('/post/:postid/comment',routeController.get_comments);
+router.get('/getpost/:id',routeController.get_fullPost);
+router.get('/post/:id/upvotes',routeController.get_upvotecount);
+router.get('/post/:id/downvotes',routeController.get_downvotecount);
+router.get('/post/:id/likes',routeController.get_likecount);
+router.get('/post/:pid/comment/:cid/upvotes',routeController.get_cmtupvotes);
+router.get('/post/:pid/comment/:cid/downvotes',routeController.get_cmtdownvotes);
+
+router.put('/post/:pid/comment/:cid/upvote',routeController.put_comupvote);
+router.put('/post/:pid/comment/:cid/downvote',routeController.put_comdownvote);
+router.put('/post/:id/notify',routeController.put_notification);
+router.get('/user/:userid/notifications',routeController.get_notifications);
+router.get('/search/:searchValue',routeController.get_searchresults);
 module.exports = router;
