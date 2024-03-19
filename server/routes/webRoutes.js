@@ -11,11 +11,9 @@ router.get('/category/:head/:subhead', routeController.get_posts);
 router.get('/user/:id',routeController.get_userposts);
 router.get('/post/:id',routeController.delete_post);
 router.put('/edit/post/:id',routeController.edit_post);
-
 router.put('/post/:postid/upvote',routeController.put_upvote);
 router.put('/post/:postid/downvote',routeController.put_downvote);
 router.put('/post/:postid/like',routeController.put_like);
-
 router.put('/post/:postid/save',routeController.save_post);
 router.get('/savedposts/:id',routeController.get_savedposts);
 router.put('/unsavepost/:postid',routeController.unsavepost);
@@ -23,15 +21,14 @@ router.get('/category/:head/:subhead/sortby/:sec',routeController.get_sortedpost
 router.put('/post/:postid/comment',routeController.put_comments);
 router.get('/post/:postid/comment',routeController.get_comments);
 router.get('/getpost/:id',routeController.get_fullPost);
-router.get('/post/:id/upvotes',routeController.get_upvotecount);
-router.get('/post/:id/downvotes',routeController.get_downvotecount);
-router.get('/post/:id/likes',routeController.get_likecount);
-router.get('/post/:pid/comment/:cid/upvotes',routeController.get_cmtupvotes);
-router.get('/post/:pid/comment/:cid/downvotes',routeController.get_cmtdownvotes);
-
+router.get('/post/:id/interactions/:username',routeController.get_interactions);
+router.get('/post/:pid/comment/:cid/cominteractions',routeController.get_cominteractions);
 router.put('/post/:pid/comment/:cid/upvote',routeController.put_comupvote);
 router.put('/post/:pid/comment/:cid/downvote',routeController.put_comdownvote);
 router.put('/post/:id/notify',routeController.put_notification);
 router.get('/user/:userid/notifications',routeController.get_notifications);
 router.get('/search/:searchValue',routeController.get_searchresults);
+router.get('/user/:userid/notifications_count',routeController.get_notificationcount);
+router.put('/notifications/:nid',routeController.make_viewed);
+router.get('/checkpost/:id',routeController.check_post)
 module.exports = router;

@@ -1,21 +1,11 @@
-import * as React from 'react';
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline';
-import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import Link from '@mui/material/Link';
-import Grid from '@mui/material/Grid';
-import Box from '@mui/material/Box';
+import React,{ useState,useContext } from 'react';
+import {Avatar,Button,CssBaseline,TextField,Link,Grid,Box,Typography,Container} from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
 import Header from './Header';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { Navigate } from 'react-router-dom'
-import { useState,useContext } from 'react';
 import { UserContext } from '../UserContext';
+
 const defaultTheme = createTheme();
 
 export default function SignupPage() {
@@ -23,7 +13,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [redirect, setRedirect] = useState(false);
-  const { userInfo, setUserInfo, isLoading } = useContext(UserContext);
+  const { userInfo, setUserInfo } = useContext(UserContext);
   const userNameErrorEle = document.getElementById('userNameError');
   const emailErrorEle = document.getElementById('emailError');
   const passwordErrorEle = document.getElementById('passwordError');
@@ -49,7 +39,6 @@ export default function SignupPage() {
       }
       if (data.user) {
         setUserInfo(data.user);
-        localStorage.setItem('user',JSON.stringify(data));
         setRedirect(true);
       }
     }

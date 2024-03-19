@@ -1,16 +1,3 @@
-// import { createContext, useState } from "react";
-
-// export const UserContext = createContext({})
-
-// export function UserContextProvider({children}){
-//     const [userInfo,setUserInfo] = useState({});
-//     return(
-//         <UserContext.Provider value={{userInfo,setUserInfo}}>
-//             {children}
-//         </UserContext.Provider>
-//     )
-// }
-
 import React, { createContext, useState, useEffect } from "react";
 
 export const UserContext = createContext({});
@@ -18,7 +5,7 @@ export const UserContext = createContext({});
 export function UserContextProvider({ children }) {
     const [userInfo, setUserInfo] = useState(null);
     const [isLoading, setIsLoading] = useState(true); // Add loading state
-    // const [postInfo,setPostInfo] = useState(null);
+    
     useEffect(() => {
         fetch('http://127.0.0.1:5000/profile', {
             credentials: 'include',
@@ -37,7 +24,7 @@ export function UserContextProvider({ children }) {
     }, []);
 
     return (
-        <UserContext.Provider value={{ userInfo, setUserInfo, isLoading }}> {/* Pass isLoading state */}
+        <UserContext.Provider value={{ userInfo, setUserInfo, isLoading }}>
             {children}
         </UserContext.Provider>
     );

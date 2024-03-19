@@ -1,7 +1,6 @@
 import '../logo1.css';
-import { Button, Container } from '@mui/material'
+import { Button } from '@mui/material'
 import React from 'react'
-import { Link } from 'react-router-dom';
 import Header from './Header'
 import backImg from '../images/heroPage.jpg';
 function HomePage() {

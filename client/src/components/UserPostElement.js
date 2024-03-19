@@ -1,54 +1,52 @@
-import * as React from 'react';
+import React, { useState,useEffect, useContext } from 'react';
 import { styled } from '@mui/material/styles';
-import { format, formatISO9075 } from 'date-fns';
-import Card from '@mui/material/Card';
-import CardHeader from '@mui/material/CardHeader';
-import CardMedia from '@mui/material/CardMedia';
-import CardContent from '@mui/material/CardContent';
-import CardActions from '@mui/material/CardActions';
-import Collapse from '@mui/material/Collapse';
-import Avatar from '@mui/material/Avatar';
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
-import { TextField } from '@mui/material';
+import { format } from 'date-fns';
+import { Card, CardActions, CardHeader, CardContent, IconButton, Typography, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Modal, Chip, Collapse } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Cancel';
-import { useState, useEffect, useContext } from 'react';
-import { UserContext } from '../UserContext';
-import { PostContext } from '../PostContext';
-import { Navigate } from 'react-router-dom';
-import Modal from '@mui/material/Modal';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { UserContext } from '../UserContext';
+import { Navigate } from 'react-router-dom';
 import { LightTooltip } from './LightToolTip';
-
-const ExpandMore = styled((props) => {
-    const { expand, ...other } = props;
-    return <IconButton {...other} />;
-})(({ theme, expand }) => ({
-    // transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
-    marginLeft: 'auto',
-    transition: theme.transitions.create('transform', {
-        duration: theme.transitions.duration.shortest,
-    }),
-}));
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 
 export default function UserPostElement({ post }) {
-    // console.log(post.author)
-
     const [openModal, setOpenModal] = useState(false); // State for modal open/close
     const [open, setOpen] = React.useState(false);
     const [openEditDilog, setOpenEditDilog] = React.useState(false);
     const [redirect, setRedirect] = useState(false);
     const [title, setTitle] = useState(post.title);
     const [description, setDescription] = useState(post.description);
-    const [expanded, setExpanded] = React.useState(false);
+    const [expanded, setExpanded] = useState(false);
+    const [titleError, setTitleError] = useState('');
+    const [descriptionError, setDescriptionError] = useState('');
     const { isLoading } = useContext(UserContext);
+    const maxWordCount = (post.section !== 'Tips' || post.section === "Dont's") ? 20 : Infinity;
+
+    useEffect(() => {
+        if (post.section !== 'Blog') {
+            setTitle('no'); // Set default title for blog section
+        }
+    }, [post.section]);
+
+    const validateAndSetDescription = (value) => {
+        const words = value.trim().split(/\s+/); // Splitting the value by spaces to count words
+        if (words.length <= maxWordCount) {
+            setDescription(value); // Set description if within word limit
+            setDescriptionError('');
+        } else {
+            setDescriptionError(`Maximum ${maxWordCount} words allowed`); // Show error if exceeding word limit
+        }
+    };
+
+
+    const words = post.description.split(/\s+/);
+    const trimmedDescription = words.slice(0, 30).join(' ');
+    const toggleExpand = () => {
+        setExpanded(!expanded);
+    };
+
     const handleClickOpenEditDilog = () => {
         setOpenEditDilog(true);
     };
@@ -84,6 +82,7 @@ export default function UserPostElement({ post }) {
         setOpen(false);
     };
     const handleOpenModal = () => {
+        // toggleExpand();
         setOpenModal(true);
     };
 
@@ -92,7 +91,8 @@ export default function UserPostElement({ post }) {
     };
     const editPost = async () => {
         console.log("hello");
-
+        setTitleError('');
+        setDescriptionError('');
         const response = await fetch(`http://127.0.0.1:5000/edit/post/${post._id}`, {
             method: 'PUT',
             body: JSON.stringify({ title, description }),
@@ -101,204 +101,135 @@ export default function UserPostElement({ post }) {
         });
         const data = await response.json();
         console.log(data)
-        if (response.ok) {
+        // if (response.ok) {
+        //     post = data;
+        //     setRedirect(true);
+        // }
+        console.log("error or data ",data);
+        if (data.errors) {
+            setTitleError(data.errors.title);
+            setDescriptionError(data.errors.description);
+            console.log(data.errors)
+        }
+        else {
             post = data;
             setRedirect(true);
         }
     }
-
-    // const { postInfo, setPostInfo } = useContext(PostContext);
-
-    const handleExpandClick = () => {
-        console.log(post);
-        // setPostInfo(post);
-        setExpanded(!expanded);
-        // return (<UserExpandedPost />)
-        // console.log(expanded);
+    const capitalizeFirstLetter = (str) => {
+        return str.replace(/\b\w/g, (char) => char.toUpperCase());
     };
+
     if (isLoading) {
         return <div>Loading...</div>; // Render loading indicator if data is still being fetched
     }
     return (
-        <Card sx={{ marginBottom: '8px', width: "80%" }}>
-            <CardHeader
-                title={post.title}
-                subheader={format(new Date(post.createdAt), "dd-MMM-yyyy")}
-            />
-            <CardContent>
-                <Typography variant="body2" color="text.secondary">
-                    {`${post.category}>${post.subcategory}>${post.section}`}
-                </Typography>
-            </CardContent>
-            <CardContent>
-                <Typography variant="body2" color="text.secondary">
-                    {post.description}
-                </Typography>
-            </CardContent>
-            <CardActions disableSpacing>
-                {/* <IconButton aria-label="add to favorites">
-          <FavoriteIcon />
-        </IconButton>
-        <IconButton aria-label="share">
-          <ShareIcon />
-        </IconButton> */}
-                {/* <IconButton> */}
+        <Card sx={{ marginBottom: '8px', width: "80%", display: 'flex', flexDirection: 'column' }}>
+            <Chip label={`${post.category}>${post.subcategory}>${post.section}`} sx={{ fontWeight: '500', alignSelf: 'flex-start', marginLeft: '12px', marginTop: '12px' }} />
 
-                {/* <Link to={`/userpost/${post._id}`}> */}
-                <ExpandMore
-                    expand={expanded}
-                    onClick={handleExpandClick}
-                    aria-expanded={expanded}
-                    aria-label="show more"
+            <CardContent>
+                <Typography>{format(new Date(post.createdAt), "dd-MMM-yyyy")}</Typography>
+                {(post.section === 'Blog') ? <Typography sx={{ fontWeight: 'bold', fontSize: '26px' }}>{capitalizeFirstLetter(post?.title)}</Typography> : <Typography variant='h6' sx={{ fontWeight: 'bold', color: "text.secondary" }}>{post?.description}</Typography>}
+
+            </CardContent>
+
+            {(!expanded && post.section === 'Blog') &&
+                <CardContent>
+                    <Typography variant="body2" color="text.secondary">
+                        {trimmedDescription}
+                    </Typography>
+                </CardContent>
+            }
+            <Collapse in={expanded} timeout="auto" unmountOnExit>
+                {(post.section === 'Blog') && <CardContent>
+                    <Typography variant="body2" color="text.secondary">
+                        {post.description}
+                    </Typography>
+                </CardContent>}
+                <CardActions disableSpacing>
+                    <LightTooltip title="Edit">
+                        <IconButton onClick={handleClickOpenEditDilog}>
+                            <EditIcon />
+                        </IconButton>
+                    </LightTooltip>
+                    <LightTooltip title="Delete">
+                        <IconButton onClick={handleClickOpen}>
+                            <DeleteIcon />
+                        </IconButton>
+                    </LightTooltip>
+                </CardActions>
+            </Collapse>
+            <CardActions disableSpacing sx={{ alignSelf: 'flex-end' }}>
+
+                <IconButton onClick={toggleExpand} aria-label="expand">
+                    {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                </IconButton>
+            </CardActions>
+            <React.Fragment>
+                <Dialog
+                    open={open}
+                    onClose={handleClose}
+                >
+                    <DialogTitle>
+                        {"Are you sure, you want to Delete?"}
+                    </DialogTitle>
+
+                    <DialogActions>
+                        <Button onClick={handleClose}>Cancel</Button>
+                        <Button onClick={deletePost} autoFocus>
+                            Delete
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            </React.Fragment>
+            <React.Fragment>
+
+                <Dialog
+                    fullWidth
+                    open={openEditDilog}
+                    onClose={handleCloseEditDilog}
 
                 >
-                    <Typography onClick={handleOpenModal}>Read more</Typography>
-                </ExpandMore>
-                {/* </Link> */}
-            </CardActions>
-
-
-            {/* {expanded && <ExpandedPost post={post} />} */}
-            <Modal
-                open={openModal}
-                onClose={handleCloseModal}
-                aria-labelledby="modal-modal-title"
-                aria-describedby="modal-modal-description"
-            >
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    width: '80%',
-                    height: '80%',
-                    position: 'absolute',
-                    padding: '6px',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    backgroundColor: '#fefefe',
-                    borderRadius: '6px',
-                    boxShadow: 24,
-                    p: 4,
-                    outline: 'none',
-                }}>
-                    {/* Modal Content */}
-                    <IconButton onClick={handleCloseModal} sx={{ alignSelf: 'flex-end' }} aria-label="recipe">
-                        <CancelIcon />
-                    </IconButton>
-                    <Card sx={{ margin: '15px' }}>
-                        <CardHeader
-
-                            title={post.title}
-                            subheader={format(new Date(post.createdAt), "dd-MMM-yyyy")}
-                        />
-                        <CardContent>
-                            <Typography variant="body2" color="text.secondary">
-                                {`${post.category}>${post.subcategory}>${post.section}`}
-                            </Typography>
-                        </CardContent>
-                        <CardContent>
-                            <Typography variant="body2" color="text.secondary">
-                                {post.description}
-                            </Typography>
-                        </CardContent>
-                        <CardActions disableSpacing>
-                        <LightTooltip title="Edit">
-                            <IconButton onClick={handleClickOpenEditDilog}>
-                                <EditIcon />
-                            </IconButton>
-                        </LightTooltip>
-                        <LightTooltip title="Delete">
-                            <IconButton onClick={handleClickOpen}>
-                                <DeleteIcon />
-                            </IconButton>
-                            </LightTooltip>
-                        </CardActions>
-
-                    </Card>
-
-                    <React.Fragment>
-
-                        <Dialog
-                            open={open}
-                            onClose={handleClose}
-                            aria-labelledby="alert-dialog-title"
-                            aria-describedby="alert-dialog-description"
-                        >
-                            <DialogTitle id="alert-dialog-title">
-                                {"Are you sure, you want to Delete?"}
-                            </DialogTitle>
-
-                            <DialogActions>
-                                <Button onClick={handleClose}>Cancel</Button>
-                                <Button onClick={deletePost} autoFocus>
-                                    Delete
-                                </Button>
-                            </DialogActions>
-                        </Dialog>
-                    </React.Fragment>
-                    <React.Fragment>
-                        {/* <Button variant="outlined" onClick={handleClickOpenEditDilog}>
-        Open form dialog
-      </Button> */}
-                        <Dialog
+                    <DialogTitle>Edit Post</DialogTitle>
+                    {(post.section === 'Blog') && <DialogContent>
+                        <TextField
+                            required
+                            margin="dense"
+                            id="title"
+                            name="title"
+                            label="Title"
+                            type="text"
                             fullWidth
-                            open={openEditDilog}
-                            onClose={handleCloseEditDilog}
-                            // PaperProps={{
-                            //     component: 'form',
-                            //     // onSubmit: (event) => {
-                            //     //   event.preventDefault();
-                            //     //   const formData = new FormData(event.currentTarget);
-                            //     //   const formJson = Object.fromEntries(formData.entries());
-                            //     //   const email = formJson.email;
-                            //     //   console.log(email);
-                            //     //   handleCloseEditDilog();
-                            //     // },
-                            // }}
-                        >
-                            <DialogTitle>Edit Post</DialogTitle>
-                            <DialogContent>
+                            variant="standard"
+                            value={title}
+                            onChange={e => setTitle(e.target.value)}
+                        />
+                        <Typography color="error">{titleError}</Typography>
+                    </DialogContent>}
+                    <DialogContent>
+                        <TextField
+                            required
+                            margin="dense"
+                            id="description"
+                            name="description"
+                            label="Description"
+                            type="text"
+                            fullWidth
+                            multiline
+                            rows={(post.section === 'Blog') ? 5 : 1}
+                        variant={(post.section === 'Blog') ? 'outlined' : 'standard'}
+                        value={description}
+                        onChange={e => validateAndSetDescription(e.target.value)}
+                        />
+                        <Typography color="error">{descriptionError}</Typography>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleCloseEditDilog}>Cancel</Button>
+                        <Button onClick={editPost}>Save</Button>
+                    </DialogActions>
+                </Dialog>
+            </React.Fragment>
 
-                                <TextField
-
-                                    required
-                                    margin="dense"
-                                    id="title"
-                                    name="title"
-                                    label="Title"
-                                    type="text"
-                                    fullWidth
-                                    variant="standard"
-                                    value={title}
-                                    onChange={e => setTitle(e.target.value)}
-                                />
-                            </DialogContent>
-                            <DialogContent>
-
-                                <TextField
-
-                                    required
-                                    margin="dense"
-                                    id="description"
-                                    name="description"
-                                    label="Description"
-                                    type="text"
-                                    fullWidth
-                                    multiline
-                                    rows={5}
-                                    variant="standard"
-                                    value={description}
-                                    onChange={e => setDescription(e.target.value)}
-                                />
-                            </DialogContent>
-                            <DialogActions>
-                                <Button onClick={handleCloseEditDilog}>Cancel</Button>
-                                <Button onClick={editPost}>Save</Button>
-                            </DialogActions>
-                        </Dialog>
-                    </React.Fragment>
-                </div>
-            </Modal>
         </Card>
     );
 }

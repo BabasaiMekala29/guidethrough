@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { Button, ButtonGroup, AppBar, Box, Toolbar, IconButton, Typography, InputBase, Badge, MenuItem, Menu, Avatar, Card, Container } from '@mui/material';
+import React, { useState,useEffect, useContext } from 'react';
+import { Button, AppBar, Box, Toolbar, IconButton, Typography, InputBase, Badge, MenuItem, Menu, Avatar, } from '@mui/material';
 import { styled, alpha } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import AccountCircle from '@mui/icons-material/AccountCircle';
@@ -9,10 +9,9 @@ import LoginIcon from '@mui/icons-material/Login';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LogoutIcon from '@mui/icons-material/Logout';
 import logoImg from '../images/logo.jpg';
-import { Link, Navigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { UserContext } from '../UserContext';
 import BookmarksIcon from '@mui/icons-material/Bookmarks';
-import { useState, useEffect, useContext } from 'react';
 import Snackbar from '@mui/material/Snackbar';
 import CloseIcon from '@mui/icons-material/Close';
 import { LightTooltip } from './LightToolTip';
@@ -20,10 +19,8 @@ import { Popover } from '@mui/material';
 import { red } from '@mui/material/colors';
 import Divider from '@mui/material/Divider';
 import { formatDistanceToNow } from 'date-fns'
-import SearchResultComp from './SearchResultComp';
 import AutoAwesomeMotionIcon from '@mui/icons-material/AutoAwesomeMotion';
 
-// import LogoutIcon from '@mui/icons-material/Logout';
 const Search = styled('div')(({ theme }) => ({
     position: 'relative',
     borderRadius: theme.shape.borderRadius,
@@ -65,7 +62,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
         },
     },
 }));
-
+const Offset = styled('div')(({ theme }) => theme.mixins.toolbar);
 function Header() {
     const [anchorEl, setAnchorEl] = React.useState(null);
     const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
@@ -74,7 +71,31 @@ function Header() {
     const [notificationsAnchorEl, setNotificationsAnchorEl] = useState(null);
     const [notifications, setNotifications] = useState([]);
     const [searchValue, setSearchValue] = useState('');
+    const [notificationsCount,setNotificationsCount] = useState(0);
     const userid = userInfo?.id || userInfo?._id;
+    
+    useEffect(()=>{
+        const fetchNotificationCount = async ()=> {
+        try {
+            const response = await fetch(`http://127.0.0.1:5000/user/${userid}/notifications_count`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch post notifications');
+            }
+            const data = await response.json();
+            console.log("nots count", data);
+            setNotifications(data);
+            let count=0;
+            for(let notification of data){
+                if(!notification.viewed) count++;
+            }
+            setNotificationsCount(count);
+        }
+        catch(err){
+            console.log(err);
+        }
+    }
+    fetchNotificationCount();
+    },[userid]);
     if (isLoading) {
         return <div>Loading...</div>; // Render loading indicator if data is still being fetched
     }
@@ -92,15 +113,30 @@ function Header() {
             method: "POST"
         })
             .then(() => {
-                // <Navigate to='/category' />
                 setIsLoggedOut(true);
                 setUserInfo(null);
             })
-        // localStorage.removeItem('user');
-
-
     }
-
+    async function makeViewed(notif_id){
+        try {
+            const response = await fetch(`http://127.0.0.1:5000/notifications/${notif_id}`, {
+                method: 'PUT',
+                body: JSON.stringify({ user: userid }),
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+              });
+            if (!response.ok) {
+                throw new Error('Failed to fetch post notifications');
+            }
+            const data = await response.json();
+            console.log(data);
+            // setNotificationsCount(data);
+        }
+        catch(err){
+            console.log(err);
+        }
+    }
     const handleNotificationsClick = async (event) => {
         handleMenuClose();
         setNotificationsAnchorEl(event.currentTarget);
@@ -109,7 +145,6 @@ function Header() {
             if (!response.ok) {
                 throw new Error('Failed to fetch post notifications');
             }
-
             const data = await response.json();
             console.log("nots ", data);
             setNotifications(data);
@@ -153,18 +188,10 @@ function Header() {
         if (e.key === 'Enter') {
             console.log('Search value:', searchValue);
             window.location.href = `/search-results?query=${searchValue}`;
-            // Here you can do whatever you want with the search value, like sending it to a function or API call
         }
     };
 
     const username = userInfo?.username;
-
-    console.log(userid)
-
-    const searchStyle = {
-        width: 600
-    }
-    const menuId = 'primary-search-account-menu';
     const renderMenu = (
         <Menu
             anchorEl={anchorEl}
@@ -172,7 +199,6 @@ function Header() {
                 vertical: 'top',
                 horizontal: 'right',
             }}
-            id={menuId}
             keepMounted
             transformOrigin={{
                 vertical: 'top',
@@ -185,12 +211,10 @@ function Header() {
                 <IconButton
                     size="medium"
                     edge="end"
-                    aria-label="account of current user"
-                    aria-controls={menuId}
-                    aria-haspopup="true"
                     onClick={handleProfileMenuOpen}
                     color="inherit"
                     href='/user/savedposts'
+                    sx={{'&:hover': { backgroundColor: 'transparent' }}}
                 >
                     <BookmarksIcon />
                     <Typography sx={{ marginLeft: '5px', fontSize: '20px' }}>Saved Posts</Typography>
@@ -203,11 +227,9 @@ function Header() {
                     <IconButton
                         size="medium"
                         edge="end"
-                        aria-label="account of current user"
-                        aria-controls={menuId}
-                        aria-haspopup="true"
                         onClick={handleProfileMenuOpen}
                         color="inherit"
+                        sx={{'&:hover': { backgroundColor: 'transparent' }}}
                     >
                         <AutoAwesomeMotionIcon />
                         <Typography sx={{ marginLeft: '5px', fontSize: '20px' }}>My Posts</Typography>
@@ -215,22 +237,9 @@ function Header() {
                 </Link>
 
             </MenuItem>
-
-            {/* <MenuItem onClick={handleNotificationsClick}>
-                <IconButton
-                    size="medium"
-                    aria-label="show 17 new notifications"
-                    color="inherit"
-                >
-                    <NotificationsIcon />
-                    <Typography sx={{ marginLeft: '5px', fontSize: '20px' }}>Notifications</Typography>
-                </IconButton>
-
-            </MenuItem> */}
         </Menu>
     );
 
-    const mobileMenuId = 'primary-search-account-menu-mobile';
     const renderMobileMenu = (
         <Menu
             anchorEl={mobileMoreAnchorEl}
@@ -238,7 +247,6 @@ function Header() {
                 vertical: 'top',
                 horizontal: 'right',
             }}
-            id={mobileMenuId}
             keepMounted
             transformOrigin={{
                 vertical: 'top',
@@ -246,12 +254,8 @@ function Header() {
             }}
             open={isMobileMenuOpen}
             onClose={handleMobileMenuClose}
-
         >
-
-
             {
-
                 !username && (<> <Link to={'/login'} style={{ textDecoration: "none", color: "inherit" }}>
                     <MenuItem >
                         <IconButton
@@ -279,15 +283,12 @@ function Header() {
                         </MenuItem>
                     </Link> </>)}
             {username && (<>
-                {/* <Typography sx={{color:"#fefefe"}}>{`Hello, ${username}`}</Typography> */}
                 <MenuItem onClick={handleProfileMenuOpen}>
                     <IconButton
                         size="medium"
-                        aria-label="account of current user"
-                        aria-controls="primary-search-account-menu"
-                        aria-haspopup="true"
                         color="inherit"
                         href='/user/savedposts'
+                        sx={{'&:hover': { backgroundColor: 'transparent' }}}
                     >
                         <BookmarksIcon />
                         <Typography sx={{ marginLeft: '5px', fontSize: '20px' }}>Saved Posts</Typography>
@@ -298,10 +299,8 @@ function Header() {
                     <Link to={'/user/posts'} style={{ textDecoration: "none", color: "inherit", fontSize: '20px', fontWeight: '500' }} >
                         <IconButton
                             size="medium"
-                            aria-label="account of current user"
-                            aria-controls="primary-search-account-menu"
-                            aria-haspopup="true"
                             color="inherit"
+                            sx={{'&:hover': { backgroundColor: 'transparent' }}}
                         >
                             <AutoAwesomeMotionIcon />
                             <Typography sx={{ marginLeft: '5px', fontSize: '20px' }}>My Posts</Typography>
@@ -314,7 +313,9 @@ function Header() {
                         size="medium"
                         color="inherit"
                     >
+                        <Badge badgeContent={notificationsCount} color="error">
                         <NotificationsIcon />
+                    </Badge>
                     </IconButton>
                     <Typography sx={{ marginLeft: '5px', fontSize: '20px' }}>Notifications</Typography>
                 </MenuItem>
@@ -334,7 +335,7 @@ function Header() {
     return (
         <>
             <Box>
-                <AppBar sx={{ position: "sticky", top: '0px' }} elevation={0}>
+                <AppBar sx={{ position: "fixed" }} elevation={0}>
                     <Toolbar sx={{ display: "flex", justifyContent: "space-between" }} >
                         <Box sx={{ display: 'flex' }}>
                             <Link to={'/'}>
@@ -383,9 +384,6 @@ function Header() {
                                         <IconButton
                                             size="large"
                                             edge="end"
-                                            aria-label="account of current user"
-                                            aria-controls={menuId}
-                                            aria-haspopup="true"
                                             onClick={handleProfileMenuOpen}
                                             color="inherit"
                                         >
@@ -398,7 +396,10 @@ function Header() {
                                                 color="inherit"
                                                 onClick={handleNotificationsClick}
                                             >
-                                                <NotificationsIcon />
+                                                <Badge badgeContent={notificationsCount} color="error">
+                                                    <NotificationsIcon />
+                                                </Badge>
+
                                             </IconButton>
                                         </LightTooltip>
                                         <LightTooltip title="Logout">
@@ -417,9 +418,6 @@ function Header() {
                             {username && <Typography sx={{ color: "#fefefe" }}>{`HELLO, ${username.toUpperCase()} !`}</Typography>}
                             <IconButton
                                 size="large"
-                                aria-label="show more"
-                                aria-controls={mobileMenuId}
-                                aria-haspopup="true"
                                 onClick={handleMobileMenuOpen}
                                 color="inherit"
                             >
@@ -428,6 +426,7 @@ function Header() {
                         </Box>
                     </Toolbar>
                 </AppBar>
+                <Offset />
                 {renderMobileMenu}
                 {renderMenu}
             </Box>
@@ -446,8 +445,6 @@ function Header() {
                 }}
             >
                 <Box marginTop={'0px'}>
-                    {/* Your notifications content goes here */}
-                    {/* You can render your notifications list or any other content */}
                     {(notifications.length === 0) ?
                         (<div style={{ display: 'flex', padding: '8px', gap: '10px', alignItems: 'center' }}>
                             <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
@@ -456,15 +453,16 @@ function Header() {
                             <p>No notifications found.</p>
                         </div>) :
                         notifications.map(notification => (
-
                             <React.Fragment key={notification._id}>
-                                <IconButton sx={{ display: 'flex', padding: '10px', marginBottom: '10px', gap: '10px', alignItems: 'center' }}
+                                <IconButton sx={{ display: 'flex',justifyContent:'flex-start', padding: '10px', marginBottom: '10px', gap: '10px', alignItems: 'center','&:hover': { backgroundColor: 'transparent' }}}
                                     href={`/post/${notification.category}/${notification.subcategory}/${notification.section}/${notification.postDetails}`}
-                                    target='_blank'>
+                                    target='_blank' onClick={()=>{makeViewed(notification._id)}}
+                                    >
+                                    {/* {(!notification.viewed)&& <Typography variant='h3'>.</Typography>} */}
                                     <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
                                         {notification.by[0].toUpperCase()}
                                     </Avatar>
-                                    <Typography color={'text.primary'}>{`${notification.by} responded to your post as '${notification.commentText.substr(0, 3)}'...`}</Typography>
+                                    <Typography sx={{fontWeight: notification.viewed ? '500' : 'bold' }} color={'text.primary'}>{`${notification.by} responded to your post as '${notification.commentText.substr(0, 3)}'...`}</Typography>
                                     <Typography sx={{ fontSize: '12px', color: 'grey', alignSelf: 'flex-end' }}>{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</Typography>
                                 </IconButton>
                                 <Divider />

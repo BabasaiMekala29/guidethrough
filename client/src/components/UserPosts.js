@@ -1,12 +1,11 @@
-import React from 'react'
-import { useState,useEffect,useContext } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
+import { Container, Typography } from '@mui/material';
 import { UserContext } from '../UserContext'
 import Header from './Header';
-import { Container, Typography } from '@mui/material';
 import UserPostElement from './UserPostElement';
 function UserPosts() {
-    const { userInfo, setUserInfo, isLoading } = useContext(UserContext);
-    const [userPosts,setUserPosts] = useState([]);
+    const { userInfo, isLoading } = useContext(UserContext);
+    const [userPosts, setUserPosts] = useState([]);
     console.log(userInfo)
     const id = userInfo?._id || userInfo?.id;
     useEffect(() => {
@@ -25,48 +24,34 @@ function UserPosts() {
                 console.log(error);
             }
         };
-
-        // if (userInfo?._id) {
-            fetchPosts();
-        // }
+        fetchPosts();
     }, [id]);
 
     if (isLoading) {
         return <div>Loading...</div>; // Render loading indicator if data is still being fetched
     }
-  return (
-    <div>
-        <Header />
-        {userInfo&&(
-            // {console.log(userInfo)}
-        // {userInfo.username}
-        
-        (<>
-        <Typography variant='h6' paddingLeft={'12px'} paddingTop={'12px'}>{`${userInfo.username.toUpperCase()}'s Posts`}</Typography>
-        <Container sx={{ paddingTop: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            
-            {/* {userPosts.posts?.map(post => (
-                <UserPostElement key={post._id} post={post} />
-                // <>
-                // <li key={post._id}>{post.title}</li>
-                // <li key={post._id}>{post.description}</li> 
-                // </> // Assuming each post has a 'title' field
-            ))} */}
-            {(userPosts?.posts?.length === 0) ?
-                        (<p>No posts found.</p>) :
-                        userPosts.posts?.map(post => (
-                <UserPostElement key={post._id} post={post} />
-                
-            ))}
-        </Container>
-        </>)
-        )}
-        {!userInfo &&(
-            <h2 style={{textAlign:'center'}}>Oops!! user logged out :(</h2>
-        )}
-        
-    </div>
-  )
+    return (
+        <div>
+            <Header />
+            {userInfo && (
+                (<>
+                    <Typography variant='h6' paddingLeft={'12px'} paddingTop={'12px'}>{`${userInfo.username.toUpperCase()}'s Posts`}</Typography>
+                    <Container sx={{ paddingTop: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        {(userPosts?.posts?.length === 0) ?
+                            (<p>No posts found.</p>) :
+                            userPosts.posts?.map(post => (
+                                <UserPostElement key={post._id} post={post} />
+
+                            ))}
+                    </Container>
+                </>)
+            )}
+            {!userInfo && (
+                <h2 style={{ textAlign: 'center' }}>Oops!! user logged out :(</h2>
+            )}
+
+        </div>
+    )
 }
 
 export default UserPosts

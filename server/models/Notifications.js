@@ -8,7 +8,8 @@ const notifSchema = new Schema({
     category: { type: String },
     subcategory: { type: String },
     section: { type: String },
-    by: { type: String }
+    by: { type: String },
+    viewed: {type: Boolean, default:false}
 });
 
 const notificationSchema = new Schema({

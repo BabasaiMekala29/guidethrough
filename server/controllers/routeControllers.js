@@ -3,8 +3,7 @@ const Post = require('../models/Post');
 const Bookmarks = require('../models/Bookmarks');
 const Notifications = require('../models/Notifications');
 const jwt = require('jsonwebtoken');
-const cookieParser = require('cookie-parser');
-const { trusted, connect } = require('mongoose');
+
 function handleErrors(err) {
     let errors = { username: '', email: '', password: '', title: '', description: '' };
 
@@ -115,7 +114,7 @@ module.exports.profile_get = (req, res) => {
 
 module.exports.create_post = async (req, res) => {
     const token = req.cookies.jwt;
-
+    console.log("title ",req.body.title)
     if (!token) {
         return res.status(401).json({ error: 'Token not found' })
     }
@@ -135,7 +134,7 @@ module.exports.create_post = async (req, res) => {
         }
         catch (err) {
             const errors = handleErrors(err);
-            // console.log("errors ",errors);
+            console.log("errors ",errors);
             res.status(400).json({ errors });
         }
 
@@ -229,8 +228,11 @@ module.exports.edit_post = async (req, res) => {
 
         res.json(post); // Send back the updated post
     } catch (error) {
-        console.error('Error updating post:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        const errors = handleErrors(error);
+            console.log("errors ",errors);
+            res.status(400).json({ errors });
+        // console.error('Error updating post:', error);
+        // res.status(500).json({ error: 'Internal server error' });
     }
 }
 
@@ -384,14 +386,26 @@ module.exports.save_post = async (req, res) => {
 
 module.exports.get_savedposts = async (req, res) => {
     const { id } = req.params;
+    console.log(id);
     try {
+        
+        
         const posts = await Bookmarks.findOne({
             userinfo: id
-        }).populate('saves', ['title', 'description', 'category', 'subcategory', 'section', 'createdAt', 'comments']);
-        // console.log("saves ", posts.saves);
+        }).populate({
+            path: 'saves',
+            select: ['title', 'description', 'category', 'subcategory', 'section', 'createdAt', 'comments'],
+            populate: {
+                path: 'author',
+                model: 'user', // Assuming your User model is named 'User'
+                select: 'username' // Retrieving only the username from the User collection
+            }
+        });
+        console.log("posts  ",posts.saves)
         res.json(posts.saves);
     }
     catch (err) {
+        console.log(err)
         res.status(400).json({ err });
     }
 }
@@ -446,6 +460,13 @@ module.exports.get_sortedposts = async (req, res) => {
                 category: head,
                 subcategory: subhead
             }).sort({ createdAt: -1 })
+        }
+        else if(sec === "Unanswered"){
+            posts = await Post.find({
+                category: head,
+                subcategory: subhead,
+                comments: { $size: 0 } 
+            })
         }
         else {
             posts = await Post.find({
@@ -542,55 +563,43 @@ module.exports.get_fullPost = async (req, res) => {
 
 }
 
-module.exports.get_upvotecount = async (req, res) => {
-    const { id } = req.params;
+module.exports.get_interactions = async (req, res) => {
+    const { id,username } = req.params;
     try {
         // const post = await Post.findById(id);
         const post = await Post.findById(id);
         // const authname = post.author.username;
+        let uped = false;
+        for(let user of post.upvotes){
+            if(user===username){
+                uped=true;
+                break;
+            }
+        }
+        let downed = false;
+        for(let user of post.downvotes){
+            if(user===username){
+                downed=true;
+                break;
+            }
+        }
+        let impressed = false;
+        for(let user of post.loves){
+            if(user===username){
+                impressed=true;
+                break;
+            }
+        }
 
-
-        res.json(post.upvote);
+        res.json({ positive: post.upvote, negative: post.downvote, fav: post.likes,uped,downed,impressed });
     }
     catch (error) {
-        console.error('Error fetching upvotes:', error);
+        console.error('Error fetching interactions:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 }
 
-module.exports.get_downvotecount = async (req, res) => {
-    const { id } = req.params;
-    try {
-        // const post = await Post.findById(id);
-        const post = await Post.findById(id);
-        // const authname = post.author.username;
-
-
-        res.json(post.downvote);
-    }
-    catch (error) {
-        console.error('Error fetching downvotes:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-}
-
-module.exports.get_likecount = async (req, res) => {
-    const { id } = req.params;
-    try {
-        // const post = await Post.findById(id);
-        const post = await Post.findById(id);
-        // const authname = post.author.username;
-
-
-        res.json(post.likes);
-    }
-    catch (error) {
-        console.error('Error fetching downvotes:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-}
-
-module.exports.get_cmtupvotes = async (req, res) => {
+module.exports.get_cominteractions = async (req, res) => {
     const { pid, cid } = req.params;
     // console.log("pid",pid);
     // console.log("cid",cid);
@@ -607,35 +616,15 @@ module.exports.get_cmtupvotes = async (req, res) => {
         // const authname = post.author.username;
         // console.log(comment.comUpvote);
 
-        res.json(comment.comUpvote);
+        res.json({ pos: comment.comUpvote, neg: comment.comDownvote });
     }
     catch (error) {
-        console.error('Error fetching comment upvotes:', error);
+        console.error('Error fetching comment interactions:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 }
 
-module.exports.get_cmtdownvotes = async (req, res) => {
-    const { pid, cid } = req.params;
-    try {
-        // const post = await Post.findById(id);
-        const post = await Post.findById(pid);
-        let comment;
-        for (let cmt of post.comments) {
-            if (cmt._id.toString() === cid) {
-                comment = cmt;
-            }
-        }
-        // const authname = post.author.username;
 
-
-        res.json(comment.comDownvote);
-    }
-    catch (error) {
-        console.error('Error fetching comment upvotes:', error);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-}
 
 module.exports.put_comupvote = async (req, res) => {
     const { pid, cid } = req.params;
@@ -687,7 +676,7 @@ module.exports.put_comdownvote = async (req, res) => {
     try {
         // Find the post by postId
         const post = await Post.findById(pid);
-        console.log(post)
+        // console.log(post)
         let comment;
         for (let cmt of post.comments) {
             if (cmt._id.toString() === cid) {
@@ -725,36 +714,44 @@ module.exports.put_comdownvote = async (req, res) => {
 
 module.exports.put_notification = async (req, res) => {
     const { id } = req.params;
-    const { user, post, by, comment, category, subcategory, section } = req.body;
-    console.log('user', user);
-    console.log('post', post);
-    console.log('by', by);
-    console.log('comment', comment);
-    console.log('category', category);
-    console.log('subcategory', subcategory);
-    console.log('section', section);
+    const { user, by, comment, category, subcategory, section } = req.body;
+    // console.log('user', user);
+    // console.log('post', post);
+    // console.log('by', by);
+    // console.log('comment', comment);
+    // console.log('category', category);
+    // console.log('subcategory', subcategory);
+    // console.log('section', section);
+    // console.log(post===id);
+    console.log(section=='Q&A')
     try {
         const doc = await Notifications.findOne({
             userinfo: user
         })
         if (!doc) {
-            const newDoc = await Notifications.create({
-                userinfo: user,
-                notifs: [{ commentText: comment, postDetails: post, by, category, subcategory, section }],
-            })
+            if(section=='Q&A'){
+                
+                const newDoc = await Notifications.create({
+                    userinfo: user,
+                    notifs: [{ commentText: comment, postDetails: id, by, category, subcategory, section }],
+                })
+            }
 
             res.json(newDoc);
         }
 
         else {
-            doc.notifs.push({ commentText: comment, postDetails: post, by, category, subcategory, section });
-            await doc.save();
+            if(section=='Q&A'){
+                doc.notifs.push({ commentText: comment, postDetails: id, by, category, subcategory, section });
+                await doc.save();
+            }
             res.json(doc);
         }
 
         // console.log("notificaion dhi ", doc);
     }
     catch (err) {
+        console.log(err);
         res.status(500).json({ error: 'Internal server error' });
     }
 
@@ -765,8 +762,7 @@ module.exports.get_notifications = async (req, res) => {
     // console.log('userid  ', userid)
     try {
         const notifications = await Notifications.findOne({ userinfo: userid });
-
-        res.json(notifications.notifs);
+        res.json(notifications.notifs.reverse());
 
     }
     catch (err) {
@@ -808,5 +804,60 @@ module.exports.get_searchresults = async (req, res) => {
     }
     catch (error) {
         res.status(500).json({ message: 'Server Error' });
+    }
+}
+
+module.exports.get_notificationcount = async (req,res)=>{
+    const {userid} = req.params;
+    try {
+        const notifications = await Notifications.findOne({ userinfo: userid });
+        // for(let i=0;i<notifications.notifs.length;i++) console.log(i,notifications.notifs[i].viewed);
+        res.json(notifications.notifs);
+
+    }
+    catch (err) {
+        res.status(500).json({ error: 'Cannot find notifications' });
+    }
+}
+
+module.exports.make_viewed = async (req,res) =>{
+    const {nid} = req.params;
+    const {user} = req.body;
+    console.log(nid);
+    // req.json(nid);
+    try {
+        const notifications = await Notifications.findOne({ userinfo: user });
+
+        for(let i=0;i<notifications.notifs.length;i++){
+            if(notifications.notifs[i]._id == nid){
+                notifications.notifs[i].viewed = true;
+                break;
+            }
+        }
+        await notifications.save();
+        res.json(notifications.notifs);
+
+    }
+    catch (err) {
+        res.status(500).json({ error: 'Cannot find user' });
+    }
+}
+
+module.exports.check_post = async (req,res)=>{
+    const {id} = req.params;
+    try{
+        const postData = await Post.findById(id);
+        if (!postData) {
+            console.log('if')
+            return res.status(404).json({ message: 'Post not found' });
+        }
+        else{
+            console.log('else')
+            return res.status(200).json({ message: 'Post found' });
+        }
+    }
+    catch(err){
+        console.log(err)
+        return res.status(404).json({ message: 'unable to find' });
     }
 }

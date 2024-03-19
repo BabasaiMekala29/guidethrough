@@ -1,27 +1,19 @@
-import * as React from 'react';
-import AppBar from '@mui/material/AppBar';
-import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import Menu from '@mui/material/Menu';
+import React, { useState, useEffect, useContext } from 'react';
+import { AppBar, Box, Toolbar, IconButton, Typography, Menu, Container, Button, MenuItem, Snackbar } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import Container from '@mui/material/Container';
-import Button from '@mui/material/Button';
-import MenuItem from '@mui/material/MenuItem';
+import SortIcon from '@mui/icons-material/Sort';
 import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
 import Header from './Header';
-import BlogCard from './BlogCard';
 import Bcard from './Bcard';
-import { Link, useParams } from 'react-router-dom';
-import PostModal from './PostModal';
-import { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../UserContext';
-import Snackbar from '@mui/material/Snackbar';
+import PostModal from './PostModal';
 import CloseIcon from '@mui/icons-material/Close';
 import { LightTooltip } from './LightToolTip';
-const pages = ['Blog', "Dont's", 'Tips', 'Q&A'];
-const sortSections = ['Popular', 'Most Useful', 'Recent', 'None'];
+import { Link, useParams } from 'react-router-dom';
+
+const pages = ['Blog', "Dont's", 'Tips', 'Q&A']; //No-gos Advice
+const sortSections = ['Popular', 'Most Useful', 'Recent', 'None']; 
+
 function Endgame() {
     const { userInfo } = useContext(UserContext);
     console.log(userInfo);
@@ -43,7 +35,6 @@ function Endgame() {
                     throw new Error('Failed to fetch posts');
                 }
                 const data = await response.json();
-                console.log(data);
                 setPosts(data);
                 // Calculate counts for each section
                 const counts = {};
@@ -60,9 +51,14 @@ function Endgame() {
         fetchPosts();
     }, [head, subhead]);
 
+    if(selectedItem==='Q&A'){
+        if(!sortSections.includes('Unanswered')) sortSections.push('Unanswered');
+    }
+    else{
+        if(sortSections.includes('Unanswered')) sortSections.pop();
+    }
     const handleClickOpen = () => {
         setOpen(true);
-
         if (!userInfo?.username) {
             setOpenSnack(true);
             return;
@@ -113,12 +109,6 @@ function Endgame() {
             const orderedData = await response.json();
             console.log(orderedData);
             setPosts(orderedData);
-            // Calculate counts for each section
-            // const counts = {};
-            // data.forEach(post => {
-            //     counts[post.section] = (counts[post.section] || 0) + 1;
-            // });
-            // setSectionCounts(counts);
 
         } catch (error) {
             console.log(error);
@@ -130,17 +120,12 @@ function Endgame() {
         <div>
             <>
                 <Header />
-
                 <AppBar position="static" sx={{ backgroundColor: "#fefefe", color: '#000000' }}>
                     <Container maxWidth="xl">
                         <Toolbar disableGutters>
-
                             <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
                                 <IconButton
                                     size="large"
-                                    aria-label="account of current user"
-                                    aria-controls="menu-appbar"
-                                    aria-haspopup="true"
                                     onClick={handleOpenNavMenu}
                                     color="inherit"
                                 >
@@ -202,7 +187,6 @@ function Endgame() {
                             <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex', justifyContent: 'space-around', alignItems: 'center' } }}>
                                 {pages.map((page) => (
                                     <Button
-
                                         key={page}
                                         onClick={() => setSelectedItem(page)}
                                         sx={{ my: 2, color: '#000000', display: 'block', backgroundColor: selectedItem === page ? '#d5722e' : 'inherit' }}
@@ -213,8 +197,6 @@ function Endgame() {
                                 ))}
 
                             </Box>
-
-
                         </Toolbar>
                     </Container>
                 </AppBar>
@@ -231,7 +213,6 @@ function Endgame() {
                             </Button>
                             <IconButton
                                 size="small"
-                                aria-label="close"
                                 color="inherit"
                                 onClick={handleCloseSnack}
                             >
@@ -243,18 +224,13 @@ function Endgame() {
 
             </>
             <Container style={{ flexGrow: 1, display: 'flex', justifyContent: 'space-between', paddingTop: '12px' }}>
-
-                <Typography>{head}{' > '}{subhead}</Typography>
+                <Typography >{head}{' > '}{subhead}</Typography>
                 <Box>
                     <IconButton
-                        size="large"
-                        aria-label="account of current user"
-                        aria-controls="menu-appbar"
-                        aria-haspopup="true"
-                        onClick={handleOpenNavMenuSort}
+                        size="large" onClick={handleOpenNavMenuSort}
                         color="inherit"
                     >
-                        <MenuIcon />
+                        <SortIcon />
                     </IconButton>
                     <Menu
                         id="menu-appbar"
@@ -279,7 +255,6 @@ function Endgame() {
                         ))}
                     </Menu>
                 </Box>
-
             </Container>
             <Container sx={{ paddingTop: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 {
@@ -289,9 +264,7 @@ function Endgame() {
                             (post.section === selectedItem) &&
                             <Bcard key={post._id} post={post} />
                         ))}
-
             </Container>
-
         </div>
     );
 }

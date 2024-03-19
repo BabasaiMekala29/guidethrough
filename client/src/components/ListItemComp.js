@@ -1,15 +1,9 @@
 import * as React from 'react';
-import ListSubheader from '@mui/material/ListSubheader';
-import List from '@mui/material/List';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import Collapse from '@mui/material/Collapse';
+import { Container, Typography,List, ListItemButton,ListItemIcon,ListItemText,Collapse  } from '@mui/material';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import StarBorder from '@mui/icons-material/StarBorder';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import { Container, Typography } from '@mui/material';
 import Masonry from 'react-masonry-css';
 import LuggageIcon from '@mui/icons-material/Luggage';
 import FastfoodIcon from '@mui/icons-material/Fastfood';
@@ -22,6 +16,7 @@ import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import SmokeFreeIcon from '@mui/icons-material/SmokeFree';
 import HealingIcon from '@mui/icons-material/Healing';
 import GavelIcon from '@mui/icons-material/Gavel';
+
 export default function NestedList() {
   const categories = {
     Travel: ['Solo Travel', 'Family Travel', 'Backpacking'],
@@ -44,7 +39,7 @@ export default function NestedList() {
     
 
   };
-  const iconArr = [<LuggageIcon sx={{color:'black'}} />,<FastfoodIcon />,<StarBorder />,<SchoolIcon />,<StarBorder />,<RoofingIcon />,<MedicationLiquidIcon />,
+  const iconArr = [<LuggageIcon />,<FastfoodIcon />,<StarBorder />,<SchoolIcon />,<StarBorder />,<RoofingIcon />,<MedicationLiquidIcon />,
   <PetsIcon />,<StarBorder />,<CurrencyRupeeIcon />,<AutoStoriesIcon />,<StarBorder />,<StarBorder />,<SmokeFreeIcon />,<HealingIcon />,<StarBorder />,<GavelIcon />]
   const catKeys = Object.keys(categories);
  
@@ -87,9 +82,8 @@ export default function NestedList() {
     <List
       sx={{ width: '100%'}}
       component="nav"
-      aria-labelledby="nested-list-subheader"
       subheader={
-        <Typography variant='h5' component="div" id="nested-list-subheader" sx={{paddingTop:'12px',paddingBottom:'12px;'}}>
+        <Typography variant='h5' component="div" sx={{paddingTop:'12px',paddingBottom:'12px;'}}>
           Categories
         </Typography>
       }
