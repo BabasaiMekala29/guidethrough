@@ -11,7 +11,7 @@ const app = express();
 // middleware
 app.use(express.static('public'));
 app.use(cookieParser());
-app.use(cors({credentials:true, origin: 'https://guidethrough-frontend.vercel.app/'}));
+app.use(cors({credentials:true, origin: 'https://guidethrough-frontend.vercel.app'}));
 app.use(express.json());
 
 
