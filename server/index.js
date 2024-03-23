@@ -14,7 +14,7 @@ app.use(express.static('public'));
 app.use(cookieParser());
 
 app.use(express.json());
-
+app.options('*', cors()); // Enable preflight for all routes
 
 const dbURI = process.env.DB_URL;
 mongoose.connect(dbURI)
