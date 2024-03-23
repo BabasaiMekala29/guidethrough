@@ -34,7 +34,9 @@ function DetailedPost() {
     const [downvoteCount, setDownvoteCount] = useState(0);
     const [liked, setLiked] = useState(false);
     const [likeCount, setLikeCount] = useState(0);
-    console.log("blog card  ", userInfo?.username)
+    const [copiedMessage, setCopiedMessage] = useState('');
+    console.log("blog card  ", userInfo?.username);
+
 
     useEffect(() => {
         let isMounted = true;
@@ -264,7 +266,7 @@ function DetailedPost() {
         tempInput.select();
         document.execCommand('copy');
         document.body.removeChild(tempInput);
-        console.log('Post link copied to clipboard');
+        setCopiedMessage('Link copied to clipboard');
     };
     const handleCloseSnack = (event, reason) => {
         if (reason === 'clickaway') {
@@ -318,7 +320,7 @@ function DetailedPost() {
                 }
             />
 
-            <Card sx={{ margin: 'auto', marginTop: '0', width: '75%', overflow: 'scroll' }}>
+            <Card sx={{ margin: 'auto', marginTop: '0', width: '75%'}}>
                 <CardHeader
                     avatar={
                         <Avatar sx={{ bgcolor: red[500] }}>
@@ -379,7 +381,12 @@ function DetailedPost() {
                             </LightTooltip>
                         </>)}
 
-                    <LightTooltip title="Share">
+                    {/* <LightTooltip title="Share">
+                        <IconButton onClick={handleShare}>
+                            <ShareIcon />
+                        </IconButton>
+                    </LightTooltip> */}
+                    <LightTooltip title={copiedMessage !== '' ? copiedMessage : "Share"}>
                         <IconButton onClick={handleShare}>
                             <ShareIcon />
                         </IconButton>

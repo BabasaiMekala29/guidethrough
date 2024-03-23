@@ -1,5 +1,6 @@
-import React, { useState,useEffect, useContext } from 'react';
-import { Button, AppBar, Box, Toolbar, IconButton, Typography, InputBase, Badge, MenuItem, Menu, Avatar, } from '@mui/material';
+import React, { useState, useEffect, useContext } from 'react';
+import { Button, AppBar, Box, Toolbar, IconButton, Typography, InputBase, Badge, MenuItem, Menu, Avatar, Chip } from '@mui/material';
+import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
 import { styled, alpha } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import AccountCircle from '@mui/icons-material/AccountCircle';
@@ -18,7 +19,8 @@ import { LightTooltip } from './LightToolTip';
 import { Popover } from '@mui/material';
 import { red } from '@mui/material/colors';
 import Divider from '@mui/material/Divider';
-import { formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns';
+import TipImage from '../images/tip.png'
 import AutoAwesomeMotionIcon from '@mui/icons-material/AutoAwesomeMotion';
 
 const Search = styled('div')(({ theme }) => ({
@@ -47,7 +49,17 @@ const SearchIconWrapper = styled('div')(({ theme }) => ({
     justifyContent: 'center',
 }));
 
-
+const DailytipTooltip = styled(({ className, ...props }) => (
+    <Tooltip {...props} classes={{ popper: className }} />
+))(({ theme }) => ({
+    [`& .${tooltipClasses.tooltip}`]: {
+        backgroundColor: '#fae28a',
+        color: 'rgba(0, 0, 0, 0.87)',
+        maxWidth: 240,
+        fontSize: theme.typography.pxToRem(16),
+        border: '1px solid #513c25',
+    },
+}));
 
 const StyledInputBase = styled(InputBase)(({ theme }) => ({
     color: 'inherit',
@@ -70,32 +82,57 @@ function Header() {
     const [isLoggedOut, setIsLoggedOut] = useState(false);
     const [notificationsAnchorEl, setNotificationsAnchorEl] = useState(null);
     const [notifications, setNotifications] = useState([]);
+    const [tip, setTip] = useState({});
     const [searchValue, setSearchValue] = useState('');
-    const [notificationsCount,setNotificationsCount] = useState(0);
+    const [notificationsCount, setNotificationsCount] = useState(0);
     const userid = userInfo?.id || userInfo?._id;
-    
-    useEffect(()=>{
-        const fetchNotificationCount = async ()=> {
-        try {
-            const response = await fetch(`http://127.0.0.1:5000/user/${userid}/notifications_count`);
-            if (!response.ok) {
-                throw new Error('Failed to fetch post notifications');
+
+    useEffect(() => {
+        const fetchNotificationCount = async () => {
+            if (userid) {
+                try {
+                    const response = await fetch(`http://127.0.0.1:5000/user/${userid}/notifications_count`);
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch post notifications');
+                    }
+                    const data = await response.json();
+                    console.log("nots count", data);
+                    setNotifications(data);
+                    let count = 0;
+                    for (let notification of data) {
+                        if (!notification.viewed) count++;
+                    }
+                    setNotificationsCount(count);
+                }
+                catch (err) {
+                    console.log(err);
+                }
             }
-            const data = await response.json();
-            console.log("nots count", data);
-            setNotifications(data);
-            let count=0;
-            for(let notification of data){
-                if(!notification.viewed) count++;
+        }
+        fetchNotificationCount();
+    }, [userid]);
+
+
+    useEffect(() => {
+        const fetchTipNotification = async () => {
+            if (userid) {
+                try {
+                    const response = await fetch(`http://127.0.0.1:5000/user/${userid}/tipNotification`);
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch post notifications');
+                    }
+                    const data = await response.json();
+                    console.log("tip", data);
+                    setTip(data);
+                }
+                catch (err) {
+                    console.log(err);
+                }
             }
-            setNotificationsCount(count);
         }
-        catch(err){
-            console.log(err);
-        }
-    }
-    fetchNotificationCount();
-    },[userid]);
+        fetchTipNotification();
+    }, [userid])
+
     if (isLoading) {
         return <div>Loading...</div>; // Render loading indicator if data is still being fetched
     }
@@ -105,7 +142,6 @@ function Header() {
         }
         setIsLoggedOut(false);
     };
-
 
     function logout() {
         fetch('http://127.0.0.1:5000/logout', {
@@ -117,15 +153,15 @@ function Header() {
                 setUserInfo(null);
             })
     }
-    async function makeViewed(notif_id){
+    async function makeViewed(notif_id) {
         try {
             const response = await fetch(`http://127.0.0.1:5000/notifications/${notif_id}`, {
                 method: 'PUT',
                 body: JSON.stringify({ user: userid }),
                 headers: {
-                  'Content-Type': 'application/json',
+                    'Content-Type': 'application/json',
                 },
-              });
+            });
             if (!response.ok) {
                 throw new Error('Failed to fetch post notifications');
             }
@@ -133,7 +169,7 @@ function Header() {
             console.log(data);
             // setNotificationsCount(data);
         }
-        catch(err){
+        catch (err) {
             console.log(err);
         }
     }
@@ -152,8 +188,9 @@ function Header() {
         catch (error) {
             console.error('Error fetching post notifications:', error);
         }
-
     };
+
+
 
     const handleNotificationsClose = () => {
         setNotificationsAnchorEl(null);
@@ -214,7 +251,7 @@ function Header() {
                     onClick={handleProfileMenuOpen}
                     color="inherit"
                     href='/user/savedposts'
-                    sx={{'&:hover': { backgroundColor: 'transparent' }}}
+                    sx={{ '&:hover': { backgroundColor: 'transparent' } }}
                 >
                     <BookmarksIcon />
                     <Typography sx={{ marginLeft: '5px', fontSize: '20px' }}>Saved Posts</Typography>
@@ -229,7 +266,7 @@ function Header() {
                         edge="end"
                         onClick={handleProfileMenuOpen}
                         color="inherit"
-                        sx={{'&:hover': { backgroundColor: 'transparent' }}}
+                        sx={{ '&:hover': { backgroundColor: 'transparent' } }}
                     >
                         <AutoAwesomeMotionIcon />
                         <Typography sx={{ marginLeft: '5px', fontSize: '20px' }}>My Posts</Typography>
@@ -288,7 +325,7 @@ function Header() {
                         size="medium"
                         color="inherit"
                         href='/user/savedposts'
-                        sx={{'&:hover': { backgroundColor: 'transparent' }}}
+                        sx={{ '&:hover': { backgroundColor: 'transparent' } }}
                     >
                         <BookmarksIcon />
                         <Typography sx={{ marginLeft: '5px', fontSize: '20px' }}>Saved Posts</Typography>
@@ -300,7 +337,7 @@ function Header() {
                         <IconButton
                             size="medium"
                             color="inherit"
-                            sx={{'&:hover': { backgroundColor: 'transparent' }}}
+                            sx={{ '&:hover': { backgroundColor: 'transparent' } }}
                         >
                             <AutoAwesomeMotionIcon />
                             <Typography sx={{ marginLeft: '5px', fontSize: '20px' }}>My Posts</Typography>
@@ -314,8 +351,8 @@ function Header() {
                         color="inherit"
                     >
                         <Badge badgeContent={notificationsCount} color="error">
-                        <NotificationsIcon />
-                    </Badge>
+                            <NotificationsIcon />
+                        </Badge>
                     </IconButton>
                     <Typography sx={{ marginLeft: '5px', fontSize: '20px' }}>Notifications</Typography>
                 </MenuItem>
@@ -380,7 +417,7 @@ function Header() {
                             {
                                 username && (
                                     <>
-                                        <Typography sx={{ color: "#fefefe", marginRight: '8px' }}>{`Hello, ${username}`}</Typography>
+                                        <Typography sx={{ color: "#fefefe", marginRight: '8px' }}>{`HELLO, ${username.toUpperCase()} !`}</Typography>
                                         <IconButton
                                             size="large"
                                             edge="end"
@@ -389,6 +426,20 @@ function Header() {
                                         >
                                             <AccountCircle />
                                         </IconButton>
+                                        <DailytipTooltip title={
+                                            <React.Fragment>
+                                                <Chip label={"Now you know: "} size="small" sx={{ fontWeight: '600', backgroundColor: '#d5722e', marginRight: '4px' }} />
+                                                <b>{tip.tip} </b>
+                                            </React.Fragment>
+                                        }>
+                                            <IconButton
+                                                size="large"
+                                                edge="end"
+                                                color="inherit"
+                                            >
+                                                <img src={TipImage} alt='Tip' height={'26px'} width={'26px'} />
+                                            </IconButton>
+                                        </DailytipTooltip>
                                         <LightTooltip title="Notifications">
                                             <IconButton
                                                 size="large"
@@ -415,7 +466,21 @@ function Header() {
                             }
                         </Box>
                         <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center' }}>
-                            {username && <Typography sx={{ color: "#fefefe" }}>{`HELLO, ${username.toUpperCase()} !`}</Typography>}
+                            {username && <><Typography sx={{ color: "#fefefe" }}>{`HELLO, ${username.toUpperCase()} !`}</Typography>
+                                <DailytipTooltip title={
+                                    <React.Fragment>
+                                        <Chip label={"Now you know: "} size="small" sx={{ fontWeight: '600', backgroundColor: '#d5722e', marginRight: '4px' }} />
+                                        <b>{tip.tip} </b>
+                                    </React.Fragment>
+                                }>
+                                    <IconButton
+                                        size="large"
+                                        edge="end"
+                                        color="inherit"
+                                    >
+                                        <img src={TipImage} alt='Tip' height={'26px'} width={'26px'} />
+                                    </IconButton>
+                                </DailytipTooltip></>}
                             <IconButton
                                 size="large"
                                 onClick={handleMobileMenuOpen}
@@ -454,15 +519,15 @@ function Header() {
                         </div>) :
                         notifications.map(notification => (
                             <React.Fragment key={notification._id}>
-                                <IconButton sx={{ display: 'flex',justifyContent:'flex-start', padding: '10px', marginBottom: '10px', gap: '10px', alignItems: 'center','&:hover': { backgroundColor: 'transparent' }}}
+                                <IconButton sx={{ display: 'flex', justifyContent: 'flex-start', padding: '10px', marginBottom: '10px', gap: '10px', alignItems: 'center', '&:hover': { backgroundColor: 'transparent' } }}
                                     href={`/post/${notification.category}/${notification.subcategory}/${notification.section}/${notification.postDetails}`}
-                                    target='_blank' onClick={()=>{makeViewed(notification._id)}}
-                                    >
+                                    target='_blank' onClick={() => { makeViewed(notification._id) }}
+                                >
                                     {/* {(!notification.viewed)&& <Typography variant='h3'>.</Typography>} */}
                                     <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
                                         {notification.by[0].toUpperCase()}
                                     </Avatar>
-                                    <Typography sx={{fontWeight: notification.viewed ? '500' : 'bold' }} color={'text.primary'}>{`${notification.by} responded to your post as '${notification.commentText.substr(0, 3)}'...`}</Typography>
+                                    <Typography sx={{ fontWeight: notification.viewed ? '500' : 'bold' }} color={'text.primary'}>{`${notification.by} responded to your post as '${notification.commentText.substr(0, 3)}'...`}</Typography>
                                     <Typography sx={{ fontSize: '12px', color: 'grey', alignSelf: 'flex-end' }}>{formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}</Typography>
                                 </IconButton>
                                 <Divider />

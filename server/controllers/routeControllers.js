@@ -1,12 +1,98 @@
 const User = require('../models/User');
 const Post = require('../models/Post');
+const nodemailer = require('nodemailer');
+require('dotenv').config();
 const Bookmarks = require('../models/Bookmarks');
 const Notifications = require('../models/Notifications');
+const tipNotification = require('../models/TipNotification');
 const jwt = require('jsonwebtoken');
+const SendmailTransport = require('nodemailer/lib/sendmail-transport');
+var validator = require('validator');
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    auth: {
+        user: process.env.USER,
+        pass: process.env.PASSWORD,
+    }
+})
+
+
+
+const sendMail = async (transporter, mailOptions) => {
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log('sent')
+    }
+    catch (err) {
+        console.log('not sent')
+        console.log(err);
+    }
+}
+
+
+
+async function getRandomPostDescription() {
+    try {
+        const posts = await Post.find({ section: { $in: ["No-gos", 'Advice'] } });
+        const totalCount = posts.length;
+        const randomIndex = Math.floor(Math.random() * totalCount);
+        return posts[randomIndex].description;
+    }
+    catch (err) {
+        console.log('Cannot get random post');
+        return 0;
+    }
+}
+
+module.exports.get_tipnotification = async (req, res) => {
+    const { uid } = req.params;
+    let userMail;
+    try {
+        const userData = await User.findById(uid);
+        userMail = userData.email;
+    }
+    catch (err) {
+        console.log(err);
+    }
+    const userData = await tipNotification.findOne({ userinfo: uid });
+    // console.log("sjnkw ",userData);
+    if (userData) {
+        const currentTime = new Date().getTime();
+        const randomPostDescription = await getRandomPostDescription();
+        if (!userData.tip || currentTime - userData.lastNotificationTimestamp > 24 * 60 * 60 * 1000) {
+            userData.tip = randomPostDescription;
+            userData.lastNotificationTimestamp = currentTime;
+            const mailOptions = {
+                from: {
+                    name: "guide through",
+                    address: process.env.USER
+                },
+                to: userMail,
+                subject: 'Now you know',
+                text: randomPostDescription
+            }
+            sendMail(transporter, mailOptions);
+            await userData.save();
+        }
+
+        // console.log(userData);
+        res.status(200).json(userData);
+    }
+    else {
+        console.log('userData');
+        res.status(404).json({ error: 'User notification record not found' });
+    }
+}
 
 function handleErrors(err) {
     let errors = { username: '', email: '', password: '', title: '', description: '' };
-
+    if (err.message === 'No recipients defined') {
+        errors.email = 'e-mail not registered'
+    }
     if (err.message === 'Incorrect username') {
         errors.email = 'user not registered'
     }
@@ -43,8 +129,55 @@ function handleErrors(err) {
 
 const maxAge = 3 * 24 * 60 * 60;
 
+module.exports.get_otp = async (req, res) => {
+    const { email } = req.body;
+    console.log(validator.isEmail(email));
+    const otpNum = Math.floor(Math.random() * 10000).toString();
+    console.log(typeof(otpNum))
+    try{
+        const userDoc = await User.findOne({email:email});
+        console.log(userDoc)
+        if(userDoc){
+            res.status(400).json({ errors: "E-mail already exists"});
+        }
+        else if(!validator.isEmail(email)){
+            res.status(400).json({ errors: "Enter valid E-mail"});
+        }
+        else{
+            const mailOptions = {
+                from: {
+                    name: "guide through",
+                    address: process.env.USER
+                },
+                to: email,
+                subject: 'Verification code for Guidethrough account creation',
+                text: otpNum
+            }
+            const sendMail =async (transporter, mailOptions) => {
+                try {
+                    await transporter.sendMail(mailOptions);
+                    res.status(200).json({ otp: otpNum });
+                    console.log('sent')
+                }
+                catch (err) {
+                    res.status(400).json({ errors: "Enter valid E-mail"});
+                    console.log(errors);
+                    
+                }
+            }
+            sendMail(transporter,mailOptions);   
+        }
+
+    }
+    catch (err) {
+        console.log('c2')
+        console.log(err)
+    }
+}
+
+
 function createToken(id, username) {
-    return jwt.sign({ id, username }, 'icandothisallday', { expiresIn: maxAge })
+    return jwt.sign({ id, username }, process.env.JWT_SECRET, { expiresIn: maxAge });
 }
 
 module.exports.signup_post = async (req, res) => {
@@ -52,6 +185,7 @@ module.exports.signup_post = async (req, res) => {
     // console.log(req.body);  
     try {
         const user = await User.create({ username, email, password });
+        await tipNotification.create({ userinfo: user._id });
         const token = createToken(user._id, user.username);
         // console.log("token",token)
         res.cookie('jwt', token, { httpOnly: true, maxAge: maxAge * 1000 });
@@ -68,6 +202,10 @@ module.exports.login_post = async (req, res) => {
     const { email, password } = req.body;
     try {
         const user = await User.login(email, password);
+        const userData = await tipNotification.findById(user._id);
+        if (!userData) {
+            await tipNotification.create({ userinfo: user._id });
+        }
         const token = createToken(user._id, user.username);
         // console.log("token",token)
         res.cookie('jwt', token, { httpOnly: true, maxAge: maxAge * 1000 });
@@ -94,31 +232,23 @@ module.exports.profile_get = (req, res) => {
     if (!token) {
         return res.status(401).json({ error: 'Token not found' })
     }
-    jwt.verify(token, 'icandothisallday', {}, (err, info) => {
+    jwt.verify(token, process.env.JWT_SECRET, {}, (err, info) => {
         if (err) {
             return res.status(401).json({ error: 'Invalid token' })
         }
         //   console.log(info)
         res.json(info);
     })
-    // jwt.verify(req.token, 'icandothisallday', (err, decoded) => {
-    //     if (err) {
-    //       res.sendStatus(403); // Forbidden if token is invalid
-    //     } else {
-    //       // Token is valid, proceed with handling the request
-    //       res.json(decoded); // Send back decoded token information as response
-    //     }
-    //   });
 
 }
 
 module.exports.create_post = async (req, res) => {
     const token = req.cookies.jwt;
-    console.log("title ",req.body.title)
+    console.log("title ", req.body.title)
     if (!token) {
         return res.status(401).json({ error: 'Token not found' })
     }
-    jwt.verify(token, 'icandothisallday', {}, async (err, info) => {
+    jwt.verify(token, process.env.JWT_SECRET, {}, async (err, info) => {
         if (err) {
             return res.status(401).json({ error: 'Invalid token' })
         }
@@ -134,7 +264,7 @@ module.exports.create_post = async (req, res) => {
         }
         catch (err) {
             const errors = handleErrors(err);
-            console.log("errors ",errors);
+            console.log("errors ", errors);
             res.status(400).json({ errors });
         }
 
@@ -173,8 +303,6 @@ module.exports.get_posts = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
-    // console.log(posts)
-    // res.json(posts);
 }
 
 module.exports.get_userposts = async (req, res) => {
@@ -186,10 +314,9 @@ module.exports.get_userposts = async (req, res) => {
         res.json({ posts });
     }
     catch (err) {
+        console.log('userposts ', err)
         res.status(400).json({ err });
     }
-
-
 }
 
 module.exports.delete_post = async (req, res) => {
@@ -229,8 +356,8 @@ module.exports.edit_post = async (req, res) => {
         res.json(post); // Send back the updated post
     } catch (error) {
         const errors = handleErrors(error);
-            console.log("errors ",errors);
-            res.status(400).json({ errors });
+        console.log("errors ", errors);
+        res.status(400).json({ errors });
         // console.error('Error updating post:', error);
         // res.status(500).json({ error: 'Internal server error' });
     }
@@ -342,18 +469,22 @@ module.exports.put_like = async (req, res) => {
 
 module.exports.save_post = async (req, res) => {
     const { postid } = req.params;
-    const { user, cmtId } = req.body;
+    const { user, cmtId, username } = req.body;
+    console.log(user, username)
     try {
         const postDoc = await Post.findById(postid);
         let i;
-        for (i = 0; i < postDoc.comments.length; i++) {
-
-            if (postDoc.comments[i]._id.toString() === cmtId) {
-                postDoc.comments[i].booked = true;
+        // for (i = 0; i < postDoc.comments.length; i++) {
+        //     if (postDoc.comments[i]._id.toString() === cmtId) {
+        //         if (!(postDoc.comments[i].booked.includes(username))) postDoc.comments[i].booked.push(username);
+        //     }
+        // }
+        for (let comment of postDoc.comments) {
+            if (comment._id.toString() === cmtId) {
+                if (!(comment.booked.includes(username))) comment.booked.push(username);
             }
         }
         await postDoc.save();
-        const userDoc = await User.findById(user);
         const doc = await Bookmarks.findOne({
             userinfo: user
         })
@@ -380,7 +511,8 @@ module.exports.save_post = async (req, res) => {
 
     }
     catch (err) {
-        res.status(500).json({ error: 'Internal server error' });
+        console.log(err)
+        res.status(500).json({ error: 'Internal server error. Unable to save' });
     }
 }
 
@@ -388,8 +520,8 @@ module.exports.get_savedposts = async (req, res) => {
     const { id } = req.params;
     console.log(id);
     try {
-        
-        
+
+
         const posts = await Bookmarks.findOne({
             userinfo: id
         }).populate({
@@ -401,8 +533,11 @@ module.exports.get_savedposts = async (req, res) => {
                 select: 'username' // Retrieving only the username from the User collection
             }
         });
-        console.log("posts  ",posts.saves)
-        res.json(posts.saves);
+        // console.log("posts  ", posts.saves);
+        if (posts) {
+            res.json(posts.saves);
+        }
+        else res.json([]);
     }
     catch (err) {
         console.log(err)
@@ -412,15 +547,24 @@ module.exports.get_savedposts = async (req, res) => {
 
 module.exports.unsavepost = async (req, res) => {
     const { postid } = req.params;
-    const { id } = req.body;
+    const { id, username } = req.body;
     // console.log(id);
     try {
         const postDoc = await Post.findById(postid);
         let i;
-        for (i = 0; i < postDoc.comments.length; i++) {
-            postDoc.comments[i].booked = false;
+        // for (i = 0; i < postDoc.comments.length; i++) {
+        //     postDoc.comments[i].booked = false;
+        // }
+        if (postDoc) {
+            for (let comment of postDoc.comments) {
+                const index = comment.booked.findIndex(uname => uname === username);
+                if (index !== -1) {
+                    comment.booked.splice(index, 1);
+                }
+            }
+
+            await postDoc.save();
         }
-        await postDoc.save();
         const posts = await Bookmarks.findOne({
             userinfo: id
         })
@@ -461,11 +605,11 @@ module.exports.get_sortedposts = async (req, res) => {
                 subcategory: subhead
             }).sort({ createdAt: -1 })
         }
-        else if(sec === "Unanswered"){
+        else if (sec === "Unanswered") {
             posts = await Post.find({
                 category: head,
                 subcategory: subhead,
-                comments: { $size: 0 } 
+                comments: { $size: 0 }
             })
         }
         else {
@@ -519,7 +663,12 @@ module.exports.get_comments = async (req, res) => {
     const { postid } = req.params;
     try {
         const post = await Post.findById(postid);
-        res.json(post.comments);
+        if (post) {
+            res.json(post.comments);
+        }
+        else {
+            res.json([]);
+        }
     }
     catch (error) {
         console.error('Error getting post:', error);
@@ -564,34 +713,34 @@ module.exports.get_fullPost = async (req, res) => {
 }
 
 module.exports.get_interactions = async (req, res) => {
-    const { id,username } = req.params;
+    const { id, username } = req.params;
     try {
         // const post = await Post.findById(id);
         const post = await Post.findById(id);
         // const authname = post.author.username;
         let uped = false;
-        for(let user of post.upvotes){
-            if(user===username){
-                uped=true;
+        for (let user of post.upvotes) {
+            if (user === username) {
+                uped = true;
                 break;
             }
         }
         let downed = false;
-        for(let user of post.downvotes){
-            if(user===username){
-                downed=true;
+        for (let user of post.downvotes) {
+            if (user === username) {
+                downed = true;
                 break;
             }
         }
         let impressed = false;
-        for(let user of post.loves){
-            if(user===username){
-                impressed=true;
+        for (let user of post.loves) {
+            if (user === username) {
+                impressed = true;
                 break;
             }
         }
 
-        res.json({ positive: post.upvote, negative: post.downvote, fav: post.likes,uped,downed,impressed });
+        res.json({ positive: post.upvote, negative: post.downvote, fav: post.likes, uped, downed, impressed });
     }
     catch (error) {
         console.error('Error fetching interactions:', error);
@@ -600,7 +749,7 @@ module.exports.get_interactions = async (req, res) => {
 }
 
 module.exports.get_cominteractions = async (req, res) => {
-    const { pid, cid } = req.params;
+    const { pid, cid, uname } = req.params;
     // console.log("pid",pid);
     // console.log("cid",cid);
     try {
@@ -613,10 +762,24 @@ module.exports.get_cominteractions = async (req, res) => {
                 comment = cmt;
             }
         }
+        let upStatus = false;
+        for (let user of comment.upvoters) {
+            if (user === uname) {
+                upStatus = true;
+                break;
+            }
+        }
+        let downStatus = false;
+        for (let user of comment.downvoters) {
+            if (user === uname) {
+                downStatus = true;
+                break;
+            }
+        }
         // const authname = post.author.username;
         // console.log(comment.comUpvote);
 
-        res.json({ pos: comment.comUpvote, neg: comment.comDownvote });
+        res.json({ pos: comment.comUpvote, neg: comment.comDownvote, upStatus, downStatus });
     }
     catch (error) {
         console.error('Error fetching comment interactions:', error);
@@ -723,14 +886,14 @@ module.exports.put_notification = async (req, res) => {
     // console.log('subcategory', subcategory);
     // console.log('section', section);
     // console.log(post===id);
-    console.log(section=='Q&A')
+    console.log(section == 'Q&A')
     try {
         const doc = await Notifications.findOne({
             userinfo: user
         })
         if (!doc) {
-            if(section=='Q&A'){
-                
+            if (section == 'Q&A') {
+
                 const newDoc = await Notifications.create({
                     userinfo: user,
                     notifs: [{ commentText: comment, postDetails: id, by, category, subcategory, section }],
@@ -741,7 +904,7 @@ module.exports.put_notification = async (req, res) => {
         }
 
         else {
-            if(section=='Q&A'){
+            if (section == 'Q&A') {
                 doc.notifs.push({ commentText: comment, postDetails: id, by, category, subcategory, section });
                 await doc.save();
             }
@@ -762,7 +925,12 @@ module.exports.get_notifications = async (req, res) => {
     // console.log('userid  ', userid)
     try {
         const notifications = await Notifications.findOne({ userinfo: userid });
-        res.json(notifications.notifs.reverse());
+        if (notifications) {
+            res.json(notifications.notifs.reverse());
+        }
+        else {
+            res.json([]);
+        }
 
     }
     catch (err) {
@@ -807,29 +975,35 @@ module.exports.get_searchresults = async (req, res) => {
     }
 }
 
-module.exports.get_notificationcount = async (req,res)=>{
-    const {userid} = req.params;
+module.exports.get_notificationcount = async (req, res) => {
+    const { userid } = req.params;
     try {
         const notifications = await Notifications.findOne({ userinfo: userid });
         // for(let i=0;i<notifications.notifs.length;i++) console.log(i,notifications.notifs[i].viewed);
-        res.json(notifications.notifs);
+        if (notifications) {
+            res.json(notifications.notifs);
+        }
+        else {
+            res.json([]);
+        }
 
     }
     catch (err) {
+        console.log("err", err)
         res.status(500).json({ error: 'Cannot find notifications' });
     }
 }
 
-module.exports.make_viewed = async (req,res) =>{
-    const {nid} = req.params;
-    const {user} = req.body;
+module.exports.make_viewed = async (req, res) => {
+    const { nid } = req.params;
+    const { user } = req.body;
     console.log(nid);
     // req.json(nid);
     try {
         const notifications = await Notifications.findOne({ userinfo: user });
 
-        for(let i=0;i<notifications.notifs.length;i++){
-            if(notifications.notifs[i]._id == nid){
+        for (let i = 0; i < notifications.notifs.length; i++) {
+            if (notifications.notifs[i]._id == nid) {
                 notifications.notifs[i].viewed = true;
                 break;
             }
@@ -843,20 +1017,20 @@ module.exports.make_viewed = async (req,res) =>{
     }
 }
 
-module.exports.check_post = async (req,res)=>{
-    const {id} = req.params;
-    try{
+module.exports.check_post = async (req, res) => {
+    const { id } = req.params;
+    try {
         const postData = await Post.findById(id);
         if (!postData) {
-            console.log('if')
+            // console.log('if')
             return res.status(404).json({ message: 'Post not found' });
         }
-        else{
-            console.log('else')
+        else {
+            // console.log('else')
             return res.status(200).json({ message: 'Post found' });
         }
     }
-    catch(err){
+    catch (err) {
         console.log(err)
         return res.status(404).json({ message: 'unable to find' });
     }

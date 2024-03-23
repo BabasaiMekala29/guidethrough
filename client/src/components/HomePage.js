@@ -2,27 +2,28 @@ import '../logo1.css';
 import { Button } from '@mui/material'
 import React from 'react'
 import Header from './Header'
-import backImg from '../images/heroPage.jpg';
+import BackgroundImage from '../images/new.jpg'
+import MobileBgImage from '../images/pbg.jpg'
 function HomePage() {
   return (
     <div style={{ position: 'relative' }}
     >
       <Header />
-      <div 
-        style={{
-          backgroundImage: `url(${backImg})`,
-          backgroundSize: 'cover',
-          backgroundRepeat: 'no-repeat',
-          height: '100vh',
-          
-        }}
+      <div id='mainContainer'
+        // style={{
+        //   backgroundImage: `url(${BackgroundImage})`,
+        //   backgroundSize: 'cover',
+        //   backgroundRepeat: 'no-repeat',
+        //   height: '100vh',
+        // }}
       >
+        
           <div className="animated-text">
             <div>G<span></span>
               <div>Through </div>
             </div>
           </div>
-          <Button href='/category' variant="contained" size='large' sx={{ position: 'absolute', right: '280px', bottom: '60px', backgroundColor: 'primary' }}>Explore</Button>
+          <Button id='exploreBtn' href='/category' variant="contained" size='large'>Explore</Button>
         </div>
       </div>
     

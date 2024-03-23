@@ -11,7 +11,7 @@ function PostModal() {
     const [titleError, setTitleError] = useState('');
     const [descriptionError, setDescriptionError] = useState('');
     const labelText = (section === 'Q&A') ? 'Add question' : `Add ${section}`;
-    const maxWordCount = (section === 'Tips' || section === "Dont's") ? 20 : Infinity;
+    const maxWordCount = (section === 'Advice' || section === "No-gos") ? 20 : Infinity;
 
     const handleClickOpen = () => {
         setOpen(true);

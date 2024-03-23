@@ -4,7 +4,7 @@ import { UserContext } from '../UserContext'
 import Header from './Header';
 import SavePostElement from './SavePostElement';
 
-function UserPosts() {
+function SavedPosts() {
     const { userInfo, setUserInfo, isLoading } = useContext(UserContext);
     const [savedPosts, setSavedPosts] = useState([]);
     console.log(userInfo)
@@ -36,7 +36,7 @@ function UserPosts() {
     return (
         <div>
             <Header />
-            {userInfo && (
+            {(userInfo?.username) && (
 
                 (<>
                     <Typography variant='h5' paddingLeft={'12px'} paddingTop={'12px'} fontWeight={'bold'}>{'Saved Posts'}</Typography>
@@ -50,12 +50,12 @@ function UserPosts() {
                     </Container>
                 </>)
             )}
-            {!userInfo && (
-                <h2 style={{ textAlign: 'center' }}>Oops!! user logged out :(</h2>
+            {!(userInfo?.username) && (
+                <h2 style={{ textAlign: 'center' }}>You logged out!!</h2>
             )}
 
         </div>
     )
 }
 
-export default UserPosts
+export default SavedPosts

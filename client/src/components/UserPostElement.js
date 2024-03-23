@@ -22,7 +22,7 @@ export default function UserPostElement({ post }) {
     const [titleError, setTitleError] = useState('');
     const [descriptionError, setDescriptionError] = useState('');
     const { isLoading } = useContext(UserContext);
-    const maxWordCount = (post.section !== 'Tips' || post.section === "Dont's") ? 20 : Infinity;
+    const maxWordCount = (post.section !== 'Advice' || post.section === "No-gos") ? 20 : Infinity;
 
     useEffect(() => {
         if (post.section !== 'Blog') {

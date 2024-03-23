@@ -12,13 +12,17 @@ function UserPosts() {
         const fetchPosts = async () => {
             console.log("hiii")
             try {
-                const response = await fetch(`http://127.0.0.1:5000/user/${id}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch posts');
+                if(id){
+
+                
+                    const response = await fetch(`http://127.0.0.1:5000/user/${id}`);
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch posts');
+                    }
+                    const data = await response.json();
+                    console.log(data);
+                    setUserPosts(data);
                 }
-                const data = await response.json();
-                console.log(data);
-                setUserPosts(data);
 
             } catch (error) {
                 console.log(error);
@@ -33,9 +37,9 @@ function UserPosts() {
     return (
         <div>
             <Header />
-            {userInfo && (
+            {(userInfo?.username) && (
                 (<>
-                    <Typography variant='h6' paddingLeft={'12px'} paddingTop={'12px'}>{`${userInfo.username.toUpperCase()}'s Posts`}</Typography>
+                    <Typography variant='h6' paddingLeft={'12px'} paddingTop={'12px'}>{`${userInfo?.username?.toUpperCase()}'s Posts`}</Typography>
                     <Container sx={{ paddingTop: '10px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         {(userPosts?.posts?.length === 0) ?
                             (<p>No posts found.</p>) :
@@ -46,8 +50,8 @@ function UserPosts() {
                     </Container>
                 </>)
             )}
-            {!userInfo && (
-                <h2 style={{ textAlign: 'center' }}>Oops!! user logged out :(</h2>
+            {!(userInfo?.username) && (
+                <h2 style={{ textAlign: 'center' }}>You logged out!!</h2>
             )}
 
         </div>

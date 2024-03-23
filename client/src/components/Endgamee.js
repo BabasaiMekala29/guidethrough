@@ -11,7 +11,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { LightTooltip } from './LightToolTip';
 import { Link, useParams } from 'react-router-dom';
 
-const pages = ['Blog', "Dont's", 'Tips', 'Q&A']; //No-gos Advice
+const pages = ['Blog', "No-gos", 'Advice', 'Q&A']; //No-gos Advice
 const sortSections = ['Popular', 'Most Useful', 'Recent', 'None']; 
 
 function Endgame() {

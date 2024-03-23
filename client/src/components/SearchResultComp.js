@@ -3,7 +3,7 @@ import Header from './Header';
 import { AppBar,Box,Toolbar,MenuItem,Typography, Container } from '@mui/material';
 import Bcard from './Bcard';
 
-const pages = ['Blog', "Dont's", 'Tips', 'Q&A'];
+const pages = ['Blog', "No-gos", 'Advice', 'Q&A'];
 function SearchResultComp() {
     
     const [selectedItem, setSelectedItem] = useState('Blog');

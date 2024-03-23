@@ -5,7 +5,9 @@ const commentSchema = new Schema({
     user: { type: String }, 
     comment: { type: String }, 
     createdAt: { type: Date, default: Date.now },
-    booked: { type: Boolean, default: false },
+    booked: {
+        type: [String], 
+    },
     comUpvote: { type: Number,default:0 },
     comDownvote: { type: Number,default:0 }, 
     upvoters: {

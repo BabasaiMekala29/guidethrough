@@ -24,7 +24,7 @@ function SavePostElement({ post }) {
     try {
       const response = await fetch(`http://127.0.0.1:5000/unsavepost/${post._id}`, {
         method: 'PUT',
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id, username: userInfo?.username }),
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
       });
@@ -73,13 +73,13 @@ function SavePostElement({ post }) {
           {(post.section === 'Blog') ? <Typography sx={{ fontWeight: 'bold', fontSize: '26px' }}>{capitalizeFirstLetter(post?.title)}</Typography> : <Typography variant='h6' sx={{ fontWeight: 'bold', color: "text.secondary" }}>{post?.description}</Typography>}
 
           <Collapse in={expanded} timeout="auto" unmountOnExit>
-          {(post.section === 'Blog')&& <Typography variant="body2" color="text.secondary" sx={{ fontSize: '18px', marginTop: '8px' }}>
+            {(post.section === 'Blog') && <Typography variant="body2" color="text.secondary" sx={{ fontSize: '18px', marginTop: '8px' }}>
               {post?.description}
             </Typography>}
             {post.section === 'Q&A' && (<Typography marginTop={'20px'}>Responses: </Typography>)}
             <Container>
               {post.comments?.map(cmt => (
-                (cmt.booked === true) &&
+                (cmt.booked.includes(userInfo?.username)) &&
                 <><Card sx={{ marginBottom: '8px', width: "80%" }} elevation={0}>
                   <CardHeader
                     avatar={

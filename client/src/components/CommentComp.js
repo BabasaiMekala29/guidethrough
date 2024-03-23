@@ -6,11 +6,13 @@ import BookmarksIcon from '@mui/icons-material/Bookmarks';
 import CloseIcon from '@mui/icons-material/Close';
 import Upvote from '../images/upvote.png';
 import Downvote from '../images/downvote.png';
+import FilledUpvote from '../images/filledupvote.png'
+import FilledDownvote from '../images/filleddownvote.png'
 import { LightTooltip } from './LightToolTip';
 import { UserContext } from '../UserContext';
 
 function CommentComp({ cmt, post }) {
-  const { userInfo } = useContext(UserContext)
+  const { userInfo } = useContext(UserContext);
   const [upvoted, setUpvoted] = useState(false);
   const [upvoteCount, setUpvoteCount] = useState(0);
   const [downvoted, setDownvoted] = useState(false);
@@ -22,18 +24,21 @@ function CommentComp({ cmt, post }) {
     const fetchInteractionsData = async () => {
       try {
         // Fetch initial upvote,downvote count from backend
-        const response = await fetch(`http://127.0.0.1:5000/post/${post._id}/comment/${cmt._id}/cominteractions`);
+        const response = await fetch(`http://127.0.0.1:5000/post/${post._id}/comment/${cmt._id}/cominteractions/${userInfo?.username}`);
         console.log(`post/${post._id}/comment/${cmt._id}`);
         const data = await response.json();
         setUpvoteCount(data.pos);
         setDownvoteCount(data.neg);
+        setUpvoted(data.upStatus);
+        setDownvoted(data.downStatus);
+
         console.log("uvote", data);
       } catch (error) {
         console.error('Error fetching upvotes:', error);
       }
     };
     fetchInteractionsData();
-  }, []);
+  }, [userInfo?.username]);
 
 
   const handleUpvote = async () => {
@@ -52,6 +57,7 @@ function CommentComp({ cmt, post }) {
       if (response.ok) {
         const data = await response.json();
         setUpvoted(!upvoted);
+        if (downvoted) setDownvoted(!downvoted);
         setUpvoteCount(data.up);
         setDownvoteCount(data.down);
       }
@@ -76,6 +82,7 @@ function CommentComp({ cmt, post }) {
       if (response.ok) {
         const data = await response.json();
         setDownvoted(!downvoted);
+        if (upvoted) setUpvoted(!upvoted);
         setUpvoteCount(data.up);
         setDownvoteCount(data.down);
       }
@@ -109,7 +116,7 @@ function CommentComp({ cmt, post }) {
     try {
       const response = await fetch(`http://127.0.0.1:5000/post/${post._id}/save`, {
         method: 'PUT',
-        body: JSON.stringify({ user: userInfo?._id || userInfo?.id, cmtId: cmt._id }),
+        body: JSON.stringify({ user: userInfo?._id || userInfo?.id, cmtId: cmt._id, username: userInfo?.username }),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -135,8 +142,8 @@ function CommentComp({ cmt, post }) {
             </Avatar>
           }
           // title={cmt.user}
-          title={<span style={{fontSize:'16px', fontWeight:'bold'}}>{cmt.user}</span>}
-          subheader={<span style={{fontSize:'14px'}}>{formatDistanceToNow(new Date(cmt.createdAt), { addSuffix: true })}</span>}
+          title={<span style={{ fontSize: '16px', fontWeight: 'bold' }}>{cmt.user}</span>}
+          subheader={<span style={{ fontSize: '14px' }}>{formatDistanceToNow(new Date(cmt.createdAt), { addSuffix: true })}</span>}
         />
 
         <CardContent>
@@ -148,13 +155,13 @@ function CommentComp({ cmt, post }) {
           <CardActions disableSpacing>
             <LightTooltip title="Upvote">
               <IconButton sx={{ display: 'flex' }} onClick={handleUpvote}>
-                <img src={Upvote} alt='upvote' height={'36px'} width={'36px'} />
+                {(upvoted) ? <img src={FilledUpvote} alt='filledupvote' height={'26px'} width={'26px'} /> : <img src={Upvote} alt='upvote' height={'36px'} width={'36px'} />}
                 <Typography>{upvoteCount}</Typography>
               </IconButton>
             </LightTooltip>
             <LightTooltip title="Downvote">
               <IconButton sx={{ display: 'flex' }} onClick={handleDownvote}>
-                <img src={Downvote} alt='downvote' height={'36px'} width={'36px'} />
+                {(downvoted) ? <img src={FilledDownvote} alt='filleddownvote' height={'26px'} width={'26px'} /> : <img src={Downvote} alt='downvote' height={'36px'} width={'36px'} />}
                 <Typography>{downvoteCount}</Typography>
               </IconButton>
             </LightTooltip>
