@@ -48,6 +48,11 @@ async function getRandomPostDescription() {
     }
 }
 
+module.exports.home = async (req, res) => {
+  // Your route logic here
+  res.send('Hello World!');
+}
+
 module.exports.get_tipnotification = async (req, res) => {
     const { uid } = req.params;
     let userMail;
