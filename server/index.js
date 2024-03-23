@@ -9,7 +9,9 @@ const jwt = require('jsonwebtoken');
 const app = express();
 
 // middleware
+// app.use(cors({origin: ['https://guidethrough-frontend.vercel.app'],methods:["POST","GET","HEAD"],credentials:true}));
 app.use(cors({origin: ['https://guidethrough-frontend.vercel.app'],methods:["POST","GET","HEAD"],credentials:true}));
+
 //added from stackoverflow
 // app.use(function(req, res, next) {
 //   res.header("Access-Control-Allow-Origin", "*");
