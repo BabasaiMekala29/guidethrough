@@ -199,6 +199,8 @@ module.exports.signup_post = async (req, res) => {
     catch (err) {
         const errors = handleErrors(err);
         // console.log(errors)
+        res.setHeader('Access-Control-Allow-Origin', 'https://guidethrough-frontend.vercel.app');
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
         res.status(400).json({ errors });
     }
 }
@@ -215,6 +217,8 @@ module.exports.login_post = async (req, res) => {
         // console.log("token",token)
         res.cookie('jwt', token, { httpOnly: true, maxAge: maxAge * 1000 });
         // console.log(user);
+        res.setHeader('Access-Control-Allow-Origin', 'https://guidethrough-frontend.vercel.app');
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
         res.status(200).json({ user, token });
     }
     catch (err) {
@@ -242,6 +246,8 @@ module.exports.profile_get = (req, res) => {
             return res.status(401).json({ error: 'Invalid token' })
         }
         //   console.log(info)
+        res.setHeader('Access-Control-Allow-Origin', 'https://guidethrough-frontend.vercel.app');
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
         res.json(info);
     })
 
