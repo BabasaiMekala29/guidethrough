@@ -2,6 +2,11 @@ const {Router} = require('express');
 const routeController = require('../controllers/routeControllers')
 const router = Router();
 
+
+
+
+// Define your routes
+router.get('/', routeController.home);
 router.post('/signup', routeController.signup_post);
 router.post('/login', routeController.login_post);
 router.post('/logout', routeController.logout_get);
