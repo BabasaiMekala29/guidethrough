@@ -194,13 +194,14 @@ module.exports.signup_post = async (req, res) => {
         const token = createToken(user._id, user.username);
         // console.log("token",token)
         res.cookie('jwt', token, { httpOnly: true, maxAge: maxAge * 1000 });
+        res.setHeader('Access-Control-Allow-Origin', 'https://guidethrough-frontend.vercel.app');
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
         res.status(201).json({ user, token });
     }
     catch (err) {
         const errors = handleErrors(err);
         // console.log(errors)
-        res.setHeader('Access-Control-Allow-Origin', 'https://guidethrough-frontend.vercel.app');
-        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        
         res.status(400).json({ errors });
     }
 }
