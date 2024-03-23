@@ -65,7 +65,7 @@ export default function BlogCard({ key, post }) {
     // Fetch commentsData from server when component mounts
     const fetchCommentsData = async () => {
       try {
-        const response = await fetch(`http://127.0.0.1:5000/post/${post._id}/comment`);
+        const response = await fetch(`https://guidethroughh.vercel.app/post/${post._id}/comment`);
         if (!response.ok) {
           throw new Error('Failed to fetch comments data');
         }
@@ -97,7 +97,7 @@ export default function BlogCard({ key, post }) {
     }
 
     try {
-      const response = await fetch(`http://127.0.0.1:5000/post/${post._id}/upvote`, {
+      const response = await fetch(`https://guidethroughh.vercel.app/post/${post._id}/upvote`, {
         method: 'PUT',
         body: canUpvote ? JSON.stringify({ upvote: upvoteCount + 1, user: userInfo?.username }) : JSON.stringify({ upvote: upvoteCount - 1, user: userInfo?.username }),
         headers: {
@@ -135,7 +135,7 @@ export default function BlogCard({ key, post }) {
     }
 
     try {
-      const response = await fetch(`http://127.0.0.1:5000/post/${post._id}/downvote`, {
+      const response = await fetch(`https://guidethroughh.vercel.app/post/${post._id}/downvote`, {
         method: 'PUT',
         body: canDownvote ? JSON.stringify({ downvote: downvoteCount + 1, user: userInfo?.username }) : JSON.stringify({ downvote: downvoteCount - 1, user: userInfo?.username }),
         headers: {
@@ -170,7 +170,7 @@ export default function BlogCard({ key, post }) {
     }
 
     try {
-      const response = await fetch(`http://127.0.0.1:5000/post/${post._id}/like`, {
+      const response = await fetch(`https://guidethroughh.vercel.app/post/${post._id}/like`, {
         method: 'PUT',
         body: canLike ? JSON.stringify({ likes: likesCount + 1, user: userInfo?.username }) : JSON.stringify({ likes: likesCount - 1, user: userInfo?.username }),
         headers: {
@@ -207,7 +207,7 @@ export default function BlogCard({ key, post }) {
     }
     console.log(post._id)
     try {
-      const response = await fetch(`http://127.0.0.1:5000/post/${post._id}/save`, {
+      const response = await fetch(`https://guidethroughh.vercel.app/post/${post._id}/save`, {
         method: 'PUT',
         body: JSON.stringify({ user: userInfo?._id || userInfo?.id }),
         headers: {
@@ -262,7 +262,7 @@ export default function BlogCard({ key, post }) {
     }
     // console.log(comment)
     try {
-      const response = await fetch(`http://127.0.0.1:5000/post/${post._id}/comment`, {
+      const response = await fetch(`https://guidethroughh.vercel.app/post/${post._id}/comment`, {
         method: 'PUT',
         body: JSON.stringify({ user: userInfo?.username, comment }),
         headers: {
