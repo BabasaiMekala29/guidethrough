@@ -7,7 +7,7 @@ export function UserContextProvider({ children }) {
     const [isLoading, setIsLoading] = useState(true); // Add loading state
     
     useEffect(() => {
-        fetch('http://127.0.0.1:5000/profile', {
+        fetch('https://guidethroughh.vercel.app/profile', {
             credentials: 'include',
         })
         .then(res => {
