@@ -9,9 +9,10 @@ const jwt = require('jsonwebtoken');
 const app = express();
 
 // middleware
+app.use(cors({origin: ['https://guidethrough-frontend.vercel.app'],methods:["POST","GET","PUT"],credentials:true}));
 app.use(express.static('public'));
 app.use(cookieParser());
-app.use(cors({credentials:true, origin: ['https://guidethrough-frontend.vercel.app'],methods:["POST","GET","PUT"]}));
+
 app.use(express.json());
 
 
